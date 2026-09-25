@@ -40,7 +40,7 @@ button:disabled{opacity:.35;cursor:default}
   <div style="height: 64px; box-sizing: border-box; padding: 0 24px; display: flex; align-items: center; gap: 24px; background: #16202A; color: #F3F5F7">
     <div style="display: flex; flex-direction: column; gap: 1px; flex-grow: 1">
       <div style="font-family: 'IBM Plex Sans Condensed', sans-serif; font-weight: 700; font-size: 21px">Regalplaner</div>
-      <div style="font-size: 12px; color: #A9B6C2">Projekt [PROJEKTNAME] · Version 25.09.2026 22:06</div>
+      <div style="font-size: 12px; color: #A9B6C2">Projekt [PROJEKTNAME] · Version 25.09.2026 22:24</div>
     </div>
     <div style="display: flex; flex-direction: column; align-items: flex-end"><span style="font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: #A9B6C2">Reihen</span><span class="mono" style="font-size: 19px">{{tot.rows}}</span></div>
     <div style="display: flex; flex-direction: column; align-items: flex-end"><span style="font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: #A9B6C2">Felder</span><span class="mono" style="font-size: 19px">{{tot.fields}}</span></div>
@@ -87,6 +87,11 @@ button:disabled{opacity:.35;cursor:default}
         <sc-for list="{{scene.ptexts}}" as="pt" hint-placeholder-count="0">
           <div style="pointer-events: none; position: absolute; left: 0; top: 0; width: {{pt.w}}px; height: {{pt.h}}px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; transform-origin: 0 0; transform: {{pt.tf}}; font-size: {{pt.fs}}px; font-weight: 700; color: #16202A; line-height: 1.05; text-align: center; white-space: nowrap">
             <span>{{pt.a}}</span><span style="font-weight: 500">{{pt.b}}</span>
+          </div>
+        </sc-for>
+        <sc-for list="{{scene.flabels}}" as="fl" hint-placeholder-count="0">
+          <div style="pointer-events: none; position: absolute; left: 0; top: 0; width: {{fl.w}}px; height: {{fl.h}}px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; transform-origin: 0 0; transform: {{fl.tf}}; font-size: {{fl.fs}}px; line-height: 1.1; color: #FFFFFF; background: #16202A; border-radius: 4px; white-space: nowrap; overflow: hidden">
+            <span style="font-weight: 700">{{fl.a}}</span><span style="color: #D5DCE3">{{fl.b}}</span>
           </div>
         </sc-for>
         <sc-for list="{{scene.binfo}}" as="bi" hint-placeholder-count="0">
@@ -1363,7 +1368,7 @@ class Component extends DCLogic {
     var MUTE = false, SINK_D = [], SINK_L = [], SINK_H = [];
     var s3 = Math.min(1000 / Math.max(maxLen, 1), (isTop ? 620 : 460) / Math.max(depthTot, 1), (isFront ? 520 : 220) / Math.max(maxH, 1)) * st.zoom;
     self._s3 = s3;
-    var p3 = [], handles = [], labels = [], ptexts = [], binfo = [];
+    var p3 = [], handles = [], labels = [], ptexts = [], binfo = [], flabels = [];
     var ROT = null;
     function Tr(x, y, z, r) {
       if (ROT) return 'translate3d(' + ROT.cx + 'px,' + ROT.cy + 'px,0px) rotateZ(' + ROT.a + 'deg) translate3d(' + (x - ROT.cx) + 'px,' + (y - ROT.cy) + 'px,' + z + 'px)' + (r || '');
@@ -1519,6 +1524,14 @@ class Component extends DCLogic {
           add(bwp, bhN, cN, Tr(xx + uwk, y0 + dpx, zN, XZ), ft + ' · bodennahe Traverse', ftgt, false, false);
         }
         if ((fOn || hiRow(ri) || isTop) && side === sides - 1) dims.push(floorDim(xx + uwk, nearAisle ? y0 + dpx : y0, bwp, 0, fmt(f.width) + ' mm', nearAisle));
+        // Feld gewählt: Feldlast und Rahmenbreiten als kompaktes Bodenlabel vor der Bemaßung
+        if (fOn && !MUTE && !sideGap && side === sides - 1) {
+          var feldlast = sum(f.levels.map(function (lv) { return perBay(f.width) * (lv.load || 0); }));
+          var tA = 'Feldlast ' + fmt(feldlast) + ' kg · Ausl. 100 %', tB = 'Rahmen L ' + fuw(r.frames[k]) + ' · R ' + fuw(r.frames[k + 1]) + ' mm';
+          var wF = bwp * 0.92, fsF = Math.max(6, Math.min(15, wF / (Math.max(tA.length, tB.length) * 0.62))), hF = fsF * 3, offF = (80 + 800 + 60) * s3;
+          flabels.push({ w: wF, h: hF, fs: fsF, a: tA, b: tB,
+            tf: Tr(xx + uwk + (bwp - wF) / 2, nearAisle ? y0 + dpx + offF : y0 - offF - hF, 2.5) });
+        }
         if (fOn) {
           var topPx = (fieldTop(f) + 150) * s3;
           add(bwp, topPx, 'rgba(225,29,72,0.05)', Tr(xx + uwk, y0 - 1, topPx, XZ), ft, ftgt, true, true);
@@ -1686,7 +1699,7 @@ class Component extends DCLogic {
     (st.udims || []).forEach(function (u) { var d = udimItem(u); if (d) dims.push(d); });
     if (st.measure && st.measA && st.measH) { var pv = self._ortho(st.measA, st.measH); if (pv) { var dp = udimItem(pv, true); if (dp) dims.push(dp); } }
     dims.forEach(function (d) { if (!d.col) d.col = '#16202A'; if (d.op === undefined) d.op = 1; });
-    var scene = { binfo: binfo, ptexts: ptexts, plan: planScene, grid: grid, parts: p3, handles: handles, labels: labels, dims: dims, tf: 'translate(' + ((st.bomOn ? -30 : 160) + (st.pan ? st.pan.x : 0)) + 'px,' + ((isTop ? -120 : isFront ? 120 : 0) + (st.pan ? st.pan.y : 0)) + 'px) rotateX(' + effTilt + 'deg) rotateZ(' + effRot + 'deg) translate3d(' + (-(FOC ? FOC.x : maxLen / 2) * s3) + 'px,' + (-(FOC ? FOC.y : depthTot / 2) * s3) + 'px,' + (FOC ? (isTop ? 0 : -FOC.z * s3) : (isFront ? -maxH * s3 / 2 : 0)) + 'px)' };
+    var scene = { flabels: flabels, binfo: binfo, ptexts: ptexts, plan: planScene, grid: grid, parts: p3, handles: handles, labels: labels, dims: dims, tf: 'translate(' + ((st.bomOn ? -30 : 160) + (st.pan ? st.pan.x : 0)) + 'px,' + ((isTop ? -120 : isFront ? 120 : 0) + (st.pan ? st.pan.y : 0)) + 'px) rotateX(' + effTilt + 'deg) rotateZ(' + effRot + 'deg) translate3d(' + (-(FOC ? FOC.x : maxLen / 2) * s3) + 'px,' + (-(FOC ? FOC.y : depthTot / 2) * s3) + 'px,' + (FOC ? (isTop ? 0 : -FOC.z * s3) : (isFront ? -maxH * s3 / 2 : 0)) + 'px)' };
 
     // Eigenschaften
     // Kontextmenü fest am linken Rand der 3D-Ansicht, unter der Hinweisleiste
