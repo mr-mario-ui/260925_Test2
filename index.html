@@ -40,7 +40,7 @@ button:disabled{opacity:.35;cursor:default}
   <div style="height: 64px; box-sizing: border-box; padding: 0 24px; display: flex; align-items: center; gap: 24px; background: #16202A; color: #F3F5F7">
     <div style="display: flex; flex-direction: column; gap: 1px; flex-grow: 1">
       <div style="font-family: 'IBM Plex Sans Condensed', sans-serif; font-weight: 700; font-size: 21px">Regalplaner</div>
-      <div style="font-size: 12px; color: #A9B6C2">Projekt [PROJEKTNAME] · Version 25.09.2026 22:24</div>
+      <div style="font-size: 12px; color: #A9B6C2">Projekt [PROJEKTNAME] · Version 25.09.2026 22:35</div>
     </div>
     <div style="display: flex; flex-direction: column; align-items: flex-end"><span style="font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: #A9B6C2">Reihen</span><span class="mono" style="font-size: 19px">{{tot.rows}}</span></div>
     <div style="display: flex; flex-direction: column; align-items: flex-end"><span style="font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: #A9B6C2">Felder</span><span class="mono" style="font-size: 19px">{{tot.fields}}</span></div>
@@ -90,8 +90,8 @@ button:disabled{opacity:.35;cursor:default}
           </div>
         </sc-for>
         <sc-for list="{{scene.flabels}}" as="fl" hint-placeholder-count="0">
-          <div style="pointer-events: none; position: absolute; left: 0; top: 0; width: {{fl.w}}px; height: {{fl.h}}px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; transform-origin: 0 0; transform: {{fl.tf}}; font-size: {{fl.fs}}px; line-height: 1.1; color: #FFFFFF; background: #16202A; border-radius: 4px; white-space: nowrap; overflow: hidden">
-            <span style="font-weight: 700">{{fl.a}}</span><span style="color: #D5DCE3">{{fl.b}}</span>
+          <div style="pointer-events: none; position: absolute; left: 0; top: 0; width: {{fl.w}}px; height: {{fl.h}}px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; transform-origin: 0 0; transform: {{fl.tf}}; font-size: {{fl.fs}}px; line-height: 1.1; color: #16202A; background: #FFFFFF; border: 1.5px solid #16202A; border-radius: 4px; white-space: nowrap; overflow: hidden">
+            <span style="font-weight: 700">{{fl.a}}</span><span>{{fl.b}}</span>
           </div>
         </sc-for>
         <sc-for list="{{scene.binfo}}" as="bi" hint-placeholder-count="0">
@@ -532,7 +532,7 @@ button:disabled{opacity:.35;cursor:default}
                 </sc-for>
               </div>
             </div>
-            <div style="display: flex; justify-content: space-between; font-size: 12.5px"><span style="color: #4A5866">Fachlast</span><span class="mono">{{ins.fachlast}} kg</span></div>
+            <div style="display: flex; justify-content: space-between; font-size: 12.5px"><span style="color: #4A5866">Fachlast (Summe Palettengewichte)</span><span class="mono">{{ins.fachlast}} kg</span></div>
             <div style="display: flex; flex-direction: column; gap: 6px">
               <sc-if value="{{ins.single}}" hint-placeholder-val="{{true}}">
                 <button type="button" onClick="{{ins.levelAll}}" style="width: 100%; height: 34px; border: 1px solid #CBD3DA; border-radius: 4px; background: #FFFFFF; cursor: pointer; font-size: 12.5px">Ausstattung &amp; Last auf alle Ebenen des Felds</button>
@@ -866,6 +866,8 @@ function fpalOf(f) { return f && f.fpt && floorSlots(f) ? PTYPES[f.fpt] || null 
 function palFitsL(f, l) { var t = palOf(f.levels[l]), n = f.levels[l + 1]; if (!t || !n) return true; return n.gap - lprof(n) - t.h >= PRM.PAL_CLEARANCE; }
 function palBase(f) { return fart(f) === 'Bodennahe Traverse' ? PRM.LOWBEAM_Z : 0; }
 function palFitsF(f) { var t = fpalOf(f), n = f.levels[0]; if (!t || !n) return true; return n.gap - lprof(n) - palBase(f) - t.h >= PRM.PAL_CLEARANCE; }
+// Fachlast einer Ebene = Summe der Palettengewichte (Stellplätze × Gewicht des zugeordneten Palettentyps)
+function fachlast(f, l) { var t = palOf(l); return t ? perBay(f.width) * t.w : 0; }
 function palHeavy(l) { var t = palOf(l); return !!(t && t.w > (l.load || 0)); }
 var DEPTHS = [800, 1100];
 var UWS = [80, 90, 100, 120];
@@ -1005,6 +1007,8 @@ function syncLists() {
 }
 function startRows() {
   var fs = []; for (var i = 0; i < Math.max(1, PRM.START_FIELDS); i++) fs.push(field(PRM.START_WIDTH, 'Ohne', PRM.START_GAPS.slice()));
+  // Start: alle Ebenen und Bodenplätze mit Europalette P1 belegt
+  fs.forEach(function (f) { f.fpt = 'P1'; f.levels.forEach(function (l) { l.pt = 'P1'; }); });
   return [withFrames({ name: 'Reihe 1', count: 1, depth: PRM.DEPTH_DEFAULT, fields: fs })];
 }
 function withFrames(row) {
@@ -1526,7 +1530,7 @@ class Component extends DCLogic {
         if ((fOn || hiRow(ri) || isTop) && side === sides - 1) dims.push(floorDim(xx + uwk, nearAisle ? y0 + dpx : y0, bwp, 0, fmt(f.width) + ' mm', nearAisle));
         // Feld gewählt: Feldlast und Rahmenbreiten als kompaktes Bodenlabel vor der Bemaßung
         if (fOn && !MUTE && !sideGap && side === sides - 1) {
-          var feldlast = sum(f.levels.map(function (lv) { return perBay(f.width) * (lv.load || 0); }));
+          var feldlast = sum(f.levels.map(function (lv) { return fachlast(f, lv); }));
           var tA = 'Feldlast ' + fmt(feldlast) + ' kg · Ausl. 100 %', tB = 'Rahmen L ' + fuw(r.frames[k]) + ' · R ' + fuw(r.frames[k + 1]) + ' mm';
           var wF = bwp * 0.92, fsF = Math.max(6, Math.min(15, wF / (Math.max(tA.length, tB.length) * 0.62))), hF = fsF * 3, offF = (80 + 800 + 60) * s3;
           flabels.push({ w: wF, h: hF, fs: fsF, a: tA, b: tB,
@@ -1579,7 +1583,7 @@ class Component extends DCLogic {
           if (!MUTE && nearAisle && showB) {
             var fsB = Math.max(7, Math.min(14, bwp / 16)), wB = Math.min(bwp * 0.96, fsB * 14), hB = fsB * 3.9, prB = lprof(lv) * s3;
             binfo.push({ w: wB, h: hB, fs: fsB, a: 'E' + (l + 1) + ' · Profil ' + lprof(lv) + ' mm', b: 'Auflage OK ' + fmt(zmm) + ' mm',
-              c: 'Fachlast ' + fmt(perBay(f.width) * (lv.load || 0)) + ' kg',
+              c: palOf(lv) ? 'Fachlast ' + fmt(fachlast(f, lv)) + ' kg' : 'Fachlast 0 kg (leer)',
               bd: sel.kind === 'field' ? '#16202A' : '#E11D48',
               tf: Tr(xx + uwk + (bwp - wB) / 2, y0 + dpx + 60 * s3 + 1.5, z - prB - 2, XZ) });
           }
@@ -1795,7 +1799,7 @@ class Component extends DCLogic {
         ins.loadOpts = opts(LOADS, same('load'), function (v) { eachL(function (x) { x.load = v; }); }, function (v) { return v + ' kg'; });
         ins.levelPal = palBlock(hitLv, [], function (fl) { eachL(function (x) { fl(x); }); });
         ins.palWarn = [hits.some(function (x) { return !palFitsL(x.f, x.l); }) ? 'Mindestens eine Palette passt nicht unter die nächste Traverse (100 mm Luft).' : '', hits.some(function (x) { return palHeavy(x.f.levels[x.l]); }) ? 'Mindestens eine Palette ist schwerer als das zulässige Gewicht je Palette.' : ''].filter(Boolean).join(' ');
-        ins.fachlast = same('load') === null ? '–' : fmt(Math.max.apply(null, hits.map(function (x) { return perBay(x.f.width); })) * L0.load) + ' (max.)';
+        ins.fachlast = fmt(Math.max.apply(null, hits.map(function (x) { return fachlast(x.f, x.f.levels[x.l]); }))) + ' (max.)';
         ins.removeOff = false; ins.removeLabel = '− Ebenen auf dieser Höhe';
         ins.removeLevel = function () {
           self.upd(ri, function (x) { x.fields.forEach(function (f) { var i = levelAt(f, hh); if (i < 0) return; if (f.levels[i + 1]) f.levels[i + 1].gap += f.levels[i].gap; f.levels.splice(i, 1); }); },
@@ -1883,7 +1887,7 @@ class Component extends DCLogic {
           ins.profOpts = profOpts(lprof(LV), function (v) { self.editField(ri, k2, function (f, L) { if (f.levels[L]) f.levels[L].prof = v; }); });
           ins.colorOpts = colorSel(LV.color || '5010', function (v) { self.editField(ri, k2, function (f, L) { if (f.levels[L]) f.levels[L].color = v; }); });
           ins.loadOpts = opts(LOADS, LV.load, function (v) { self.editField(ri, k2, function (f, L) { if (f.levels[L]) f.levels[L].load = v; }); }, function (v) { return v + ' kg'; });
-          ins.fachlast = fmt(perBay(FD.width) * LV.load);
+          ins.fachlast = fmt(fachlast(FD, LV));
           ins.levelPal = palBlock([LV], [], function (fl) { self.editField(ri, k2, function (f, L) { if (f.levels[L]) fl(f.levels[L]); }); });
           ins.palWarn = [!palFitsL(FD, l) ? 'Palette passt nicht: über der Ladung bleiben weniger als 100 mm bis zur nächsten Traverse.' : '', palHeavy(LV) ? 'Palette (' + fmt(palOf(LV).w) + ' kg) ist schwerer als das zulässige Gewicht je Palette dieser Ebene (' + fmt(LV.load) + ' kg).' : ''].filter(Boolean).join(' ');
           ins.levelAll = function () { self.editField(ri, k2, function (f, L) { f.levels.forEach(function (v) { v.deck = LV.deck; v.load = LV.load; }); }); };
