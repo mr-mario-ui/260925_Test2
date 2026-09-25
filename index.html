@@ -40,7 +40,7 @@ button:disabled{opacity:.35;cursor:default}
   <div style="height: 64px; box-sizing: border-box; padding: 0 24px; display: flex; align-items: center; gap: 24px; background: #16202A; color: #F3F5F7">
     <div style="display: flex; flex-direction: column; gap: 1px; flex-grow: 1">
       <div style="font-family: 'IBM Plex Sans Condensed', sans-serif; font-weight: 700; font-size: 21px">Regalplaner</div>
-      <div style="font-size: 12px; color: #A9B6C2">Projekt [PROJEKTNAME] · Version 25.09.2026 23:36</div>
+      <div style="font-size: 12px; color: #A9B6C2">Projekt [PROJEKTNAME] · Version 26.09.2026 00:11</div>
     </div>
     <div style="display: flex; flex-direction: column; align-items: flex-end"><span style="font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: #A9B6C2">Reihen</span><span class="mono" style="font-size: 19px">{{tot.rows}}</span></div>
     <div style="display: flex; flex-direction: column; align-items: flex-end"><span style="font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: #A9B6C2">Felder</span><span class="mono" style="font-size: 19px">{{tot.fields}}</span></div>
@@ -713,7 +713,8 @@ button:disabled{opacity:.35;cursor:default}
             <label style="display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; font-weight: 600; color: #4A5866">Name der Konfiguration
               <input type="text" id="saveName" value="{{io.name}}" onChange="{{io.setName}}" style="height: 36px; border: 1px solid #CBD3DA; border-radius: 4px; padding: 0 10px; font-size: 14px; color: #16202A; font-weight: 400">
             </label>
-            <button type="button" onClick="{{io.saveLocal}}" style="height: 38px; border: 0; border-radius: 4px; background: #45787E; color: #FFFFFF; font-weight: 600; font-size: 13.5px; cursor: pointer">Im Browser speichern</button>
+            <button type="button" onClick="{{io.saveFile}}" style="height: 38px; border: 0; border-radius: 4px; background: #45787E; color: #FFFFFF; font-weight: 600; font-size: 13.5px; cursor: pointer">Als Datei speichern (.json)</button>
+            <button type="button" onClick="{{io.saveLocal}}" style="height: 34px; border: 1px solid #45787E; border-radius: 4px; background: #FFFFFF; color: #45787E; font-weight: 600; font-size: 12.5px; cursor: pointer">Im Browser speichern</button>
             <div style="font-size: 12px; color: #4A5866">Oder als Text sichern, z. B. in einer E-Mail oder Datei – über „Laden“ lässt er sich wieder einfügen:</div>
             <textarea id="saveJson" readOnly="{{io.yes}}" value="{{io.json}}" style="height: 150px; resize: vertical; border: 1px solid #CBD3DA; border-radius: 4px; padding: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #16202A"></textarea>
             <button type="button" onClick="{{io.copyJson}}" style="height: 34px; border: 1px solid #CBD3DA; border-radius: 4px; background: #FFFFFF; cursor: pointer; font-size: 12.5px">Text kopieren</button>
@@ -722,7 +723,10 @@ button:disabled{opacity:.35;cursor:default}
 
         <sc-if value="{{io.isLoad}}" hint-placeholder-val="{{false}}">
           <div style="display: flex; flex-direction: column; gap: 12px">
-            <span style="font-size: 12.5px; font-weight: 600; color: #4A5866">Im Browser gespeichert</span>
+            <label style="position: relative; height: 38px; display: grid; place-items: center; border: 0; border-radius: 4px; background: #45787E; color: #FFFFFF; font-weight: 600; font-size: 13.5px; cursor: pointer">Datei öffnen (.json) …
+              <input type="file" accept=".json,application/json" onChange="{{io.openFile}}" style="position: absolute; inset: 0; opacity: 0; cursor: pointer">
+            </label>
+            <span style="font-size: 12.5px; font-weight: 600; color: #4A5866; margin-top: 4px">Im Browser gespeichert</span>
             <sc-if value="{{io.noSaves}}" hint-placeholder-val="{{false}}">
               <span style="font-size: 12.5px; color: #4A5866">Noch keine Konfiguration in diesem Browser gespeichert.</span>
             </sc-if>
@@ -2097,7 +2101,7 @@ class Component extends DCLogic {
         var json = JSON.stringify(data);
         function msg(text, ok) { self.setState({ ioMsg: text, ioOk: !!ok }); }
         function applyData(d) {
-          if (!d || !Array.isArray(d.rows) || !d.rows.length) { msg('Der Text enthält keine gültige Konfiguration.'); return false; }
+          if (!d || !Array.isArray(d.rows) || !d.rows.length) { msg('Die Datei bzw. der Text enthält keine gültige Konfiguration.'); return false; }
           self.setState({ rows: d.rows, aisle: d.aisle || 3000, udims: Array.isArray(d.udims) ? d.udims : [], palTypes: Array.isArray(d.palTypes) ? d.palTypes : [], sel: null, dlg: null, ioMsg: null, ioPaste: '' });
           return true;
         }
@@ -2110,6 +2114,20 @@ class Component extends DCLogic {
           name: st.ioName !== undefined ? st.ioName : 'Konfiguration ' + new Date().toLocaleDateString('de-DE'),
           setName: function (e) { self.setState({ ioName: e.target.value }); },
           json: json,
+          saveFile: function () {
+            var name = (st.ioName !== undefined ? st.ioName : 'Konfiguration ' + new Date().toLocaleDateString('de-DE')).trim() || 'Konfiguration';
+            var out = Object.assign({ app: 'Regalplaner', name: name, savedAt: new Date().toISOString() }, data, st.plan ? { plan: st.plan } : {});
+            var file = name.replace(/[\\/:*?"<>|]+/g, '_').replace(/\s+/g, '_') + '.json';
+            downloadBlob(new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' }), file);
+            msg('Datei „' + file + '“ wurde heruntergeladen.', true);
+          },
+          openFile: function (e) {
+            var f = e.target.files && e.target.files[0]; if (!f) return; e.target.value = '';
+            f.text().then(function (txt) {
+              var d; try { d = JSON.parse(txt); } catch (err) { msg('„' + f.name + '“ ist keine gültige Konfigurationsdatei (JSON).'); return; }
+              if (applyData(d)) { if (d.plan) self.setState({ plan: d.plan }); if (d.name) self.setState({ ioName: d.name }); }
+            });
+          },
           saveLocal: function () {
             var name = (st.ioName !== undefined ? st.ioName : 'Konfiguration ' + new Date().toLocaleDateString('de-DE')).trim() || 'Ohne Namen';
             var list = readSaves();
