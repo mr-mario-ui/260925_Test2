@@ -40,7 +40,7 @@ button:disabled{opacity:.35;cursor:default}
   <div style="height: 64px; box-sizing: border-box; padding: 0 24px; display: flex; align-items: center; gap: 24px; background: #16202A; color: #F3F5F7">
     <div style="display: flex; flex-direction: column; gap: 1px; flex-grow: 1">
       <div style="font-family: 'IBM Plex Sans Condensed', sans-serif; font-weight: 700; font-size: 21px">Regalplaner</div>
-      <div style="font-size: 12px; color: #A9B6C2">Projekt [PROJEKTNAME] · Version 25.09.2026 23:02</div>
+      <div style="font-size: 12px; color: #A9B6C2">Projekt [PROJEKTNAME] · Version 25.09.2026 23:21</div>
     </div>
     <div style="display: flex; flex-direction: column; align-items: flex-end"><span style="font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: #A9B6C2">Reihen</span><span class="mono" style="font-size: 19px">{{tot.rows}}</span></div>
     <div style="display: flex; flex-direction: column; align-items: flex-end"><span style="font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: #A9B6C2">Felder</span><span class="mono" style="font-size: 19px">{{tot.fields}}</span></div>
@@ -157,6 +157,11 @@ button:disabled{opacity:.35;cursor:default}
             </div>
           </div>
           <div style="font-size: 12px; color: #4A5866">{{bom.summary}}</div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px">
+            <select data-options="{{bom.rowOpts}}" value="{{bom.rowSel.val}}" onChange="{{bom.rowSel.change}}" aria-label="Reihe" style="height: 30px; border: 1px solid #CBD3DA; border-radius: 4px; padding: 0 6px; font-size: 12.5px; background: #FFFFFF; color: #16202A; cursor: pointer"></select>
+            <select data-options="{{bom.byOpts}}" value="{{bom.bySel.val}}" onChange="{{bom.bySel.change}}" aria-label="Gliederung" style="height: 30px; border: 1px solid #CBD3DA; border-radius: 4px; padding: 0 6px; font-size: 12.5px; background: #FFFFFF; color: #16202A; cursor: pointer"></select>
+          </div>
+          <sc-if value="{{bom.filterNote}}" hint-placeholder-val="{{false}}"><div style="font-size: 12px; font-weight: 600; color: #1F4E9C">{{bom.filterNote}}</div></sc-if>
           <div style="flex-grow: 1; min-height: 0; overflow: auto">
             <sc-for list="{{bom.groups}}" as="g" hint-placeholder-count="3">
               <div style="display: flex; flex-direction: column; margin-bottom: 10px">
@@ -165,7 +170,7 @@ button:disabled{opacity:.35;cursor:default}
                   <div style="display: grid; grid-template-columns: 30px 48px 1fr; gap: 6px; align-items: baseline; padding: 5px 0; border-bottom: 1px solid #EDF0F3; font-size: 12.5px">
                     <span class="mono" style="color: #4A5866; font-size: 11px">{{it.pos}}</span>
                     <span class="mono" style="text-align: right; font-weight: 600">{{it.qty}}×</span>
-                    <span>{{it.text}}</span>
+                    <span>{{it.text}}<sc-if value="{{it.sub}}" hint-placeholder-val="{{false}}"><span style="display: block; font-size: 11px; color: #4A5866">{{it.sub}}</span></sc-if></span>
                   </div>
                 </sc-for>
               </div>
@@ -996,10 +1001,21 @@ function applyParams(book) {
       else PRM[key2] = String(val);
     }
   }
+  var kgName = null; for (var kk in book) if (norm(kk) === 'kalkulationsgruppen') kgName = kk;
+  if (kgName) {
+    var kg = book[kgName], order = [];
+    for (var r3 = 1; r3 < kg.length; r3++) { var rr = kg[r3] || []; if (!rr[0] || !rr[1]) continue; KALK[String(rr[0]).trim()] = String(rr[1]).trim(); if (order.indexOf(String(rr[1]).trim()) < 0) order.push(String(rr[1]).trim()); }
+    if (order.length) KALK_ORDER = order.concat(['Sonstiges']);
+  }
   syncLists();
   return msgs;
 }
 var LISTS = {};
+// Bauteilgruppe -> Kalkulationsgruppe (über Blatt „Kalkulationsgruppen“ in parameter.xlsx änderbar)
+var KALK = { 'Stützrahmen': 'Grundregal', 'Traversen': 'Grundregal', 'Kleinteile': 'Grundregal', 'Distanzstücke': 'Grundregal',
+  'Ebenenausstattung': 'Optionen', 'Durchschubsicherung': 'Optionen', 'Stützenschutz': 'Optionen' };
+var KALK_ORDER = ['Grundregal', 'Optionen', 'Sonstiges'];
+function kalkOf(g) { return KALK[g] || 'Sonstiges'; }
 function syncLists() {
   if (LISTS.WIDTHS) WIDTHS = LISTS.WIDTHS; if (LISTS.HEIGHTS) HEIGHTS = LISTS.HEIGHTS; if (LISTS.DEPTHS) DEPTHS = LISTS.DEPTHS; if (LISTS.UWS) UWS = LISTS.UWS;
   if (LISTS.PROFS) PROFS = LISTS.PROFS; if (LISTS.DECKS) DECKS = LISTS.DECKS; if (LISTS.GUARDS) GUARDS = LISTS.GUARDS; if (LISTS.LOADS) LOADS = LISTS.LOADS;
@@ -1683,10 +1699,12 @@ class Component extends DCLogic {
     var grid = { w: 2 * GR + maxLen * s3, h: 2 * GR + depthTot * s3, tf: Tr(-GR, -GR, -3), major: gMaj, minor: gMin, off: (GR % gMaj) };
     // ---- Stückliste (live aus der Konfiguration) ----
     var bomMap = {}, order2 = [];
-    function addB(group, key, text, qty) { var k = group + '|' + key; if (!bomMap[k]) { bomMap[k] = { group: group, text: text, qty: 0 }; order2.push(k); } bomMap[k].qty += qty; }
+    var BRI = 0; // aktuelle Reihe beim Aufsummieren
+    function addB(group, key, text, qty) { var k = group + '|' + key; if (!bomMap[k]) { bomMap[k] = { group: group, text: text, qty: 0, byRow: {} }; order2.push(k); } bomMap[k].qty += qty; bomMap[k].byRow[BRI] = (bomMap[k].byRow[BRI] || 0) + qty; }
     function ralName(id) { for (var i = 0; i < RAL.length; i++) if (RAL[i].id === (id || '5010')) return RAL[i].name; return 'RAL ' + id; }
     var nFrames = 0, nBeams = 0;
-    st.rows.forEach(function (r) {
+    st.rows.forEach(function (r, riB) {
+      BRI = riB; var nFr0 = nFrames, nBe0 = nBeams;
       var m = r.count * (r.double ? 2 : 1);
       var nSpacerFrames = 0;
       r.frames.forEach(function (fr, k) {
@@ -1707,26 +1725,37 @@ class Component extends DCLogic {
           if (f.push) addB('Durchschubsicherung', String(f.width), 'Durchschubsicherung ' + fmt(f.width) + ' mm', m);
         });
       });
+      if (nBeams > nBe0) addB('Kleinteile', 'pin', 'Sicherungsstift (2 je Traverse)', (nBeams - nBe0) * 2);
+      if (nFrames > nFr0) addB('Kleinteile', 'anchor', 'Bodenanker (2 je Stützrahmen)', (nFrames - nFr0) * 2);
     });
-    if (nBeams) addB('Kleinteile', 'pin', 'Sicherungsstift (2 je Traverse)', nBeams * 2);
-    if (nFrames) addB('Kleinteile', 'anchor', 'Bodenanker (2 je Stützrahmen)', nFrames * 2);
     var GROUPS = ['Stützrahmen', 'Traversen', 'Ebenenausstattung', 'Durchschubsicherung', 'Distanzstücke', 'Stützenschutz', 'Kleinteile'], posN = 0;
-    var bomGroups = GROUPS.map(function (g) {
-      var items = order2.filter(function (k) { return bomMap[k].group === g; }).map(function (k) { posN++; return { pos: pad3(posN), qty: fmt(bomMap[k].qty), text: bomMap[k].text }; });
+    var bRow = (st.bomRow === undefined || st.bomRow === '' || !st.rows[Number(st.bomRow)]) ? '' : String(st.bomRow), byKalk = st.bomBy === 'kalk';
+    function bq(k) { return bRow === '' ? bomMap[k].qty : (bomMap[k].byRow[Number(bRow)] || 0); }
+    var posOf = {}; GROUPS.forEach(function (g) { order2.forEach(function (k) { if (bomMap[k].group === g) { posN++; posOf[k] = pad3(posN); } }); });
+    var heads = byKalk ? KALK_ORDER.filter(function (kg) { return order2.some(function (k) { return kalkOf(bomMap[k].group) === kg; }); }) : GROUPS;
+    var bomGroups = heads.map(function (g) {
+      var keys = order2.filter(function (k) { return (byKalk ? kalkOf(bomMap[k].group) : bomMap[k].group) === g && bq(k) > 0; });
+      keys.sort(function (x, y) { return posOf[x] < posOf[y] ? -1 : 1; });
+      var items = keys.map(function (k) { return { pos: posOf[k], qty: fmt(bq(k)), text: bomMap[k].text + (byKalk ? '' : '') , sub: byKalk ? bomMap[k].group : '' }; });
       return { title: g, items: items };
     }).filter(function (g) { return g.items.length; });
     var bomText = bomGroups.map(function (g) { return g.title + '\n' + g.items.map(function (it) { return it.pos + '  ' + it.qty + ' ×  ' + it.text; }).join('\n'); }).join('\n\n');
-    var bom = { on: !!st.bomOn, groups: bomGroups, copyLabel: st.bomCopied ? 'Kopiert' : 'Kopieren',
+    var bom = { on: !!st.bomOn, groups: bomGroups,
+      rowSel: { val: bRow, change: function (e) { self.setState({ bomRow: e.target.value }); } },
+      rowOpts: [{ v: '', l: 'Alle Reihen' }].concat(st.rows.map(function (r, i) { return { v: String(i), l: r.name + (r.count > 1 ? ' (' + r.count + '×)' : '') }; })),
+      bySel: { val: byKalk ? 'kalk' : 'group', change: function (e) { self.setState({ bomBy: e.target.value }); } },
+      byOpts: [{ v: 'group', l: 'nach Bauteilgruppe' }, { v: 'kalk', l: 'nach Kalkulationsgruppe' }],
+      filterNote: bRow === '' ? '' : 'Nur ' + st.rows[Number(bRow)].name + (st.rows[Number(bRow)].count > 1 ? ' (alle ' + st.rows[Number(bRow)].count + ' Exemplare)' : ''), copyLabel: st.bomCopied ? 'Kopiert' : 'Kopieren',
       summary: posN + ' Positionen · ' + tot.rows + ' Reihen · ' + tot.fields + ' Felder · ' + tot.places + ' Stellplätze' + (tot.pal ? ' · ' + tot.pal + ' Paletten (' + fmt(tot.palKg) + ' kg)' : ''),
       xlsx: function () {
         var now = new Date(), T = function (v, s) { return { v: v, s: s || 0 }; };
         var rows = [[T('Stückliste Regalanlage', 4)], [T('Projekt', 1), T('[PROJEKTNAME]')], [T('Erstellt', 1), T(now.toLocaleString('de-DE'))],
           [T('Umfang', 1), T(tot.rows + ' Reihen · ' + tot.fields + ' Felder · ' + tot.places + ' Stellplätze')], [],
-          [T('Pos.', 2), T('Gruppe', 2), T('Menge', 2), T('Einheit', 2), T('Bezeichnung', 2)]];
+          [T('Pos.', 2), T('Kalkulationsgruppe', 2), T('Bauteilgruppe', 2), T('Menge', 2), T('Einheit', 2), T('Bezeichnung', 2)]];
         var pn = 0;
         GROUPS.forEach(function (g) {
           order2.filter(function (k) { return bomMap[k].group === g; }).forEach(function (k) {
-            pn++; rows.push([T(pad3(pn)), T(g), T(bomMap[k].qty, 3), T('Stk.'), T(bomMap[k].text)]);
+            pn++; rows.push([T(pad3(pn)), T(kalkOf(g)), T(g), T(bomMap[k].qty, 3), T('Stk.'), T(bomMap[k].text)]);
           });
         });
         // zweites Blatt: Kennzahlen und Felder
@@ -1734,7 +1763,13 @@ class Component extends DCLogic {
           [T('Paletten', 1), T(tot.pal, 3)], [T('Palettengewicht gesamt (kg)', 1), T(tot.palKg, 3)], [T('Gassenbreite (mm)', 1), T(st.aisle, 3)], [],
           [T('Feldtyp', 2), T('Feldart', 2), T('Feldweite (mm)', 2), T('Ebenen', 2), T('Anzahl', 2)]];
         order.forEach(function (sg) { var ty = types[sg]; ov.push([T(ty.id), T(fart(ty.f)), T(ty.f.width, 3), T(ty.f.levels.length, 3), T(ty.n, 3)]); });
-        var blob = buildXlsx([{ name: 'Stückliste', cols: [8, 22, 10, 8, 70], rows: rows }, { name: 'Kennzahlen', cols: [30, 22, 16, 10, 10], rows: ov }]);
+        // Matrix: Bauteile × Reihen
+        var mx = [[T('Stückliste nach Reihen', 4)], [], [T('Pos.', 2), T('Kalkulationsgruppe', 2), T('Bauteilgruppe', 2), T('Bezeichnung', 2)].concat(st.rows.map(function (r) { return T(r.name + (r.count > 1 ? ' (' + r.count + '×)' : ''), 2); }), [T('Summe', 2)])];
+        var pm = 0;
+        GROUPS.forEach(function (g) { order2.filter(function (k) { return bomMap[k].group === g; }).forEach(function (k) {
+          pm++; mx.push([T(pad3(pm)), T(kalkOf(g)), T(g), T(bomMap[k].text)].concat(st.rows.map(function (r, i) { return T(bomMap[k].byRow[i] || 0, 3); }), [T(bomMap[k].qty, 3)]));
+        }); });
+        var blob = buildXlsx([{ name: 'Stückliste', cols: [8, 20, 20, 10, 8, 70], rows: rows }, { name: 'Nach Reihen', cols: [8, 20, 20, 60].concat(st.rows.map(function () { return 14; }), [12]), rows: mx }, { name: 'Kennzahlen', cols: [30, 22, 16, 10, 10], rows: ov }]);
         var d = now.getFullYear() + ('0' + (now.getMonth() + 1)).slice(-2) + ('0' + now.getDate()).slice(-2);
         downloadBlob(blob, 'Stueckliste_' + d + '.xlsx');
       },
