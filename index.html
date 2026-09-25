@@ -40,7 +40,7 @@ button:disabled{opacity:.35;cursor:default}
   <div style="height: 64px; box-sizing: border-box; padding: 0 24px; display: flex; align-items: center; gap: 24px; background: #16202A; color: #F3F5F7">
     <div style="display: flex; flex-direction: column; gap: 1px; flex-grow: 1">
       <div style="font-family: 'IBM Plex Sans Condensed', sans-serif; font-weight: 700; font-size: 21px">Regalplaner</div>
-      <div style="font-size: 12px; color: #A9B6C2">Projekt [PROJEKTNAME] · direkt im 3D bearbeiten</div>
+      <div style="font-size: 12px; color: #A9B6C2">Projekt [PROJEKTNAME] · Version 25.09.2026 22:06</div>
     </div>
     <div style="display: flex; flex-direction: column; align-items: flex-end"><span style="font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: #A9B6C2">Reihen</span><span class="mono" style="font-size: 19px">{{tot.rows}}</span></div>
     <div style="display: flex; flex-direction: column; align-items: flex-end"><span style="font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: #A9B6C2">Felder</span><span class="mono" style="font-size: 19px">{{tot.fields}}</span></div>
@@ -1562,12 +1562,12 @@ class Component extends DCLogic {
           if (lon) add(bwp, dpx, 'rgba(225,29,72,0.10)', Tr(xx + uwk, y0, z + 1), lt, ltgt, true, true);
           if (f.push) add(bwp, Math.max(1.5, 40 * s3), '#5F6B76', Tr(xx + uwk, nearAisle ? y0 + 2 : y0 + dpx - 2, z + 220 * s3, XZ), lt, ltgt);
           // Feld (oder eine Ebene darin) gewählt: Traversendaten auf der Gangseite einblenden
-          var showB = sel && (inSel('field', ri, k) || (sel.kind === 'level' && !multi.length && sel.ri === ri && sel.k === k) || hiLevel(ri, k, l, zmm));
+          var showB = sel && (inSel('field', ri, k) || hiLevel(ri, k, l, zmm));
           if (!MUTE && nearAisle && showB) {
             var fsB = Math.max(7, Math.min(14, bwp / 16)), wB = Math.min(bwp * 0.96, fsB * 14), hB = fsB * 3.9, prB = lprof(lv) * s3;
             binfo.push({ w: wB, h: hB, fs: fsB, a: 'E' + (l + 1) + ' · Profil ' + lprof(lv) + ' mm', b: 'Auflage OK ' + fmt(zmm) + ' mm',
               c: 'Fachlast ' + fmt(perBay(f.width) * (lv.load || 0)) + ' kg',
-              bd: hiLevel(ri, k, l, zmm) ? '#E11D48' : '#16202A',
+              bd: sel.kind === 'field' ? '#16202A' : '#E11D48',
               tf: Tr(xx + uwk + (bwp - wB) / 2, y0 + dpx + 60 * s3 + 1.5, z - prB - 2, XZ) });
           }
           var TL = palOf(lv); if (TL) pallets(z, TL, !palFitsL(f, l) || palHeavy(lv), lt + ' · Palette ' + TL.id + ' · ' + fmt(TL.h) + ' mm / ' + fmt(TL.w) + ' kg', ltgt);
