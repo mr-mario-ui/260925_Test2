@@ -40,7 +40,7 @@ button:disabled{opacity:.35;cursor:default}
   <div style="height: 64px; box-sizing: border-box; padding: 0 24px; display: flex; align-items: center; gap: 24px; background: #16202A; color: #F3F5F7">
     <div style="display: flex; flex-direction: column; gap: 1px; flex-grow: 1">
       <div style="font-family: 'IBM Plex Sans Condensed', sans-serif; font-weight: 700; font-size: 21px">Regalplaner</div>
-      <div style="font-size: 12px; color: #A9B6C2">Projekt [PROJEKTNAME] · Version 25.09.2026 23:28</div>
+      <div style="font-size: 12px; color: #A9B6C2">Projekt [PROJEKTNAME] · Version 25.09.2026 23:36</div>
     </div>
     <div style="display: flex; flex-direction: column; align-items: flex-end"><span style="font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: #A9B6C2">Reihen</span><span class="mono" style="font-size: 19px">{{tot.rows}}</span></div>
     <div style="display: flex; flex-direction: column; align-items: flex-end"><span style="font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: #A9B6C2">Felder</span><span class="mono" style="font-size: 19px">{{tot.fields}}</span></div>
@@ -1616,15 +1616,25 @@ class Component extends DCLogic {
           var nP = perBay(f.width); if (!nP) return;
           var H = T.h, gP = (f.width - nP * 800) / (nP + 1), pw = 800 * s3, pd = 1200 * s3, ph = H * s3, zT = zBase + ph, py = y0 + (dpx - pd) / 2, bp = Math.min(ph, 144 * s3);
           var cL = bad ? '#EFA3A3' : T.color, cT = bad ? '#F4B8B8' : tint(T.color, 0.25), cS2 = bad ? '#D98A8A' : tint(T.color, -0.12);
-          var side = function (c) { return 'linear-gradient(to bottom, ' + c + ' 0px, ' + c + ' ' + (ph - bp) + 'px, #8E6A3F ' + (ph - bp) + 'px, #7A5A34 ' + ph + 'px)'; };
+          // Europalette maßstäblich (vereinfacht): Deckbrett 22, Querbrett 22, Klötze 78, Bodenbrett 22 = 144 mm
+          // Stirnseite 800: Klötze 100 / 145 / 100 mm · Längsseite 1200: Klötze 145 / 145 / 145 mm
+          var side = function (c, longSide) {
+            var top = ph - bp; if (bp < 4) return 'linear-gradient(to bottom, ' + c + ' 0px, ' + c + ' ' + top + 'px, #8E6A3F ' + top + 'px, #7A5A34 ' + ph + 'px)';
+            var k = bp / 144, W = '#C9A46A', W2 = '#B8925C', HOLE = '#3E3222';
+            var st = longSide ? [12.08, 43.96, 56.04, 87.92] : [12.5, 40.94, 59.06, 87.5];
+            var blocks = 'linear-gradient(to right, ' + W2 + ' 0 ' + st[0] + '%, transparent ' + st[0] + '% ' + st[1] + '%, ' + W2 + ' ' + st[1] + '% ' + st[2] + '%, transparent ' + st[2] + '% ' + st[3] + '%, ' + W2 + ' ' + st[3] + '% 100%)';
+            var bTop = top + (longSide ? 22 : 44) * k, bH = (longSide ? 100 : 78) * k;
+            var band = 'linear-gradient(to bottom, ' + W + ' 0 ' + (22 * k - 0.6) + 'px, #7A5A34 ' + (22 * k - 0.6) + 'px ' + (22 * k) + 'px, ' + (longSide ? HOLE : W2) + ' ' + (22 * k) + 'px ' + (44 * k) + 'px, ' + HOLE + ' ' + (44 * k) + 'px ' + (122 * k) + 'px, ' + W + ' ' + (122 * k) + 'px ' + (144 * k) + 'px)';
+            return blocks + ' 0 ' + bTop + 'px / 100% ' + bH + 'px no-repeat, ' + band + ' 0 ' + top + 'px / 100% ' + bp + 'px no-repeat, linear-gradient(' + c + ', ' + c + ') 0 0 / 100% ' + Math.max(0, top) + 'px no-repeat';
+          };
           var fsP = Math.min(pw / 8.8, (ph - bp) * 0.2, 20), faceY = nearAisle ? py + pd + 0.8 : py - 0.8;
           for (var iP = 0; iP < nP; iP++) {
             var pxP = xx + uwk + (gP + iP * (800 + gP)) * s3;
             add(pw, pd, cT, Tr(pxP, py, zT), ttl, tg);
-            add(pw, ph, side(cL), Tr(pxP, py + pd, zT, XZ), ttl, tg);
-            add(pw, ph, side(cL), Tr(pxP, py, zT, XZ), ttl, tg);
-            add(pd, ph, side(cS2), Tr(pxP, py, zT, YZ), ttl, tg);
-            add(pd, ph, side(cS2), Tr(pxP + pw, py, zT, YZ), ttl, tg);
+            add(pw, ph, side(cL, false), Tr(pxP, py + pd, zT, XZ), ttl, tg);
+            add(pw, ph, side(cL, false), Tr(pxP, py, zT, XZ), ttl, tg);
+            add(pd, ph, side(cS2, true), Tr(pxP, py, zT, YZ), ttl, tg);
+            add(pd, ph, side(cS2, true), Tr(pxP + pw, py, zT, YZ), ttl, tg);
             // Höhe und Gewicht auf der Vorderseite (Gangseite)
             if (fsP >= 5 && !MUTE) ptexts.push({ w: pw, h: ph - bp, fs: fsP, a: T.id + ' · ' + fmt(H) + ' mm', b: fmt(T.w) + ' kg',
               tf: nearAisle ? Tr(pxP, faceY, zT, XZ) : Tr(pxP + pw, faceY, zT, XZ + ' rotateY(180deg)') });
@@ -2319,7 +2329,11 @@ class Component extends DCLogic {
                 face(isoFl, [xf, y0, 0], [w, 0, 0], [0, D, 0], fa === 'Durchgang' ? '#CFE6D8' : fa === 'Durchfahrt' ? '#F4E3A1' : '#E4EAF1', [0, 0, 1]);
                 if (fa === 'Bodennahe Traverse') { var cN = ralHex(f.levels[0] ? f.levels[0].color : '5010'); box(xf, y0, PRM.LOWBEAM_Z - PRM.LOWBEAM_PROF, w, 50, PRM.LOWBEAM_PROF, cN); box(xf, y0 + D - 50, PRM.LOWBEAM_Z - PRM.LOWBEAM_PROF, w, 50, PRM.LOWBEAM_PROF, cN); }
                 var z = 0, nPI = perBay(w), gPI = (w - nPI * 800) / (nPI + 1);
-                var palI = function (zb, T, bad) { for (var ip = 0; ip < nPI; ip++) { var xp = xf + gPI + ip * (800 + gPI), yp = y0 + (D - 1200) / 2; box(xp, yp, zb, 800, 1200, 144, '#8E6A3F'); box(xp, yp, zb + 144, 800, 1200, Math.max(10, T.h - 144), bad ? '#EFA3A3' : T.color); } };
+                var palI = function (zb, T, bad) { for (var ip = 0; ip < nPI; ip++) { var xp = xf + gPI + ip * (800 + gPI), yp = y0 + (D - 1200) / 2; if (tot.pal > 400) box(xp, yp, zb, 800, 1200, 144, '#B8925C'); else {
+                  [[0, 100], [327.5, 145], [700, 100]].forEach(function (bx) { box(xp + bx[0], yp, zb, bx[1], 1200, 22, '#C9A46A');
+                    [[0, 145], [527.5, 145], [1055, 145]].forEach(function (by) { box(xp + bx[0], yp + by[0], zb + 22, bx[1], by[1], 78, '#B8925C'); }); });
+                  [[0, 145], [527.5, 145], [1055, 145]].forEach(function (by) { box(xp, yp + by[0], zb + 100, 800, by[1], 22, '#B8925C'); });
+                  box(xp, yp, zb + 122, 800, 1200, 22, '#C9A46A'); } box(xp, yp, zb + 144, 800, 1200, Math.max(10, T.h - 144), bad ? '#EFA3A3' : T.color); } };
                 if (fpalOf(f)) palI(palBase(f), fpalOf(f), !palFitsF(f));
                 f.levels.forEach(function (lv, li) {
                   z += lv.gap; var pr = lprof(lv), cB = ralHex(lv.color);
@@ -2344,7 +2358,7 @@ class Component extends DCLogic {
           // Kamera wie in der Zeichenfläche: gleiche Drehung/Neigung (rotateX(tilt) rotateZ(rot)) und Perspektive 1800 px
           var T = [(mn[0] + mx[0]) / 2, (mn[1] + mx[1]) / 2, mx[2] * 0.35];
           var ra = st.rot * Math.PI / 180, ta = st.tilt * Math.PI / 180, cr = Math.cos(ra), sr = Math.sin(ra), ct = Math.cos(ta), stt = Math.sin(ta);
-          var Pmm = 1800 / Math.max(1e-6, s3), near = -Pmm * 0.9;
+          var Pmm = 1800 / Math.max(1e-6, (s3 / st.zoom) * 1.6), near = -Pmm * 0.9;
           function dot(u, v) { return u[0] * v[0] + u[1] * v[1] + u[2] * v[2]; }
           function cam(P) {
             var x = P[0] - T[0], y = P[1] - T[1], z = P[2] - T[2];
@@ -2397,7 +2411,9 @@ class Component extends DCLogic {
           var palS = function (zb, T) {
             for (var ip = 0; ip < nPS; ip++) {
               var xp = x0 + (uw + gPS + ip * (800 + gPS)) * s, H = T.h;
-              o.rect(xp, yF - (zb + H) * s, 800 * s, (H - 144) * s, tint(T.color, 0.55), '0.6px solid ' + T.color); o.rect(xp, yF - (zb + 144) * s, 800 * s, 144 * s, '#B08A5A', '0.6px solid #6E5230');
+              o.rect(xp, yF - (zb + H) * s, 800 * s, (H - 144) * s, tint(T.color, 0.55), '0.6px solid ' + T.color); o.rect(xp, yF - (zb + 144) * s, 800 * s, 22 * s, '#C9A46A', '0.4px solid #6E5230'); o.rect(xp, yF - (zb + 122) * s, 800 * s, 22 * s, '#B8925C', '0.4px solid #6E5230');
+              [[0, 100], [327.5, 145], [700, 100]].forEach(function (bk) { o.rect(xp + bk[0] * s, yF - (zb + 100) * s, bk[1] * s, 78 * s, '#B8925C', '0.4px solid #6E5230'); });
+              o.rect(xp, yF - (zb + 22) * s, 800 * s, 22 * s, '#C9A46A', '0.4px solid #6E5230');
               var fsS = Math.min(8.5, 800 * s * 0.14); if (fsS >= 4.5) { o.text(xp + 400 * s, yF - (zb + 144 + (H - 144) / 2) * s - fsS * 0.6, T.id + ' · ' + fmt(H), fsS, 700); o.text(xp + 400 * s, yF - (zb + 144 + (H - 144) / 2) * s + fsS * 0.6, fmt(T.w) + ' kg', fsS, 400); }
             }
           };
