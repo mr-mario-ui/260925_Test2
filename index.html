@@ -40,7 +40,7 @@ button:disabled{opacity:.35;cursor:default}
   <div style="height: 64px; box-sizing: border-box; padding: 0 24px; display: flex; align-items: center; gap: 24px; background: #16202A; color: #F3F5F7">
     <div style="display: flex; flex-direction: column; gap: 1px; flex-grow: 1">
       <div style="font-family: 'IBM Plex Sans Condensed', sans-serif; font-weight: 700; font-size: 21px">Regalplaner</div>
-      <div style="font-size: 12px; color: #A9B6C2">Projekt [PROJEKTNAME] · Version 25.09.2026 22:35</div>
+      <div style="font-size: 12px; color: #A9B6C2">Projekt [PROJEKTNAME] · Version 25.09.2026 22:46</div>
     </div>
     <div style="display: flex; flex-direction: column; align-items: flex-end"><span style="font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: #A9B6C2">Reihen</span><span class="mono" style="font-size: 19px">{{tot.rows}}</span></div>
     <div style="display: flex; flex-direction: column; align-items: flex-end"><span style="font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: #A9B6C2">Felder</span><span class="mono" style="font-size: 19px">{{tot.fields}}</span></div>
@@ -106,8 +106,8 @@ button:disabled{opacity:.35;cursor:default}
       </div>
       <span></span>
       <sc-if value="{{isoOn}}" hint-placeholder-val="{{false}}">
-        <div onPointerDown="{{stop}}" onClick="{{stop}}" style="position: absolute; left: 50%; bottom: 34px; transform: translateX(-50%); z-index: 5; display: flex; align-items: center; gap: 10px; background: #16202A; color: #F3F5F7; border-radius: 6px; padding: 6px 6px 6px 12px; box-shadow: 0 4px 14px rgba(22,32,42,0.25); cursor: default">
-          <span style="font-size: 12.5px">Isolierte Ansicht: <b>{{isoName}}</b> – alles andere ausgeblendet</span>
+        <div onPointerDown="{{stop}}" onClick="{{stop}}" style="position: absolute; left: 12px; top: 56px; width: 300px; box-sizing: border-box; z-index: 21; display: flex; align-items: center; justify-content: space-between; gap: 8px; background: #16202A; color: #F3F5F7; border-radius: 6px; padding: 5px 5px 5px 10px; box-shadow: 0 4px 14px rgba(22,32,42,0.25); cursor: default">
+          <span style="font-size: 12px; line-height: 1.2">Isoliert: <b>{{isoName}}</b></span>
           <button type="button" onClick="{{isoOff}}" style="height: 28px; padding: 0 10px; border: 0; border-radius: 4px; background: #F3F5F7; color: #16202A; font-weight: 600; font-size: 12px; cursor: pointer">Alle zeigen</button>
         </div>
       </sc-if>
@@ -1544,6 +1544,7 @@ class Component extends DCLogic {
         var zmm = 0;
         // Paletten (Europalette 800 × 1200, mittig auf der Rahmentiefe, gleichmäßig im Feld verteilt)
         function pallets(zBase, T, bad, ttl, tg) {
+          if (!MUTE && self._bb) self._bb.h = Math.max(self._bb.h, zBase / s3 + T.h);
           if (st.palShow === false || !T) return;
           var nP = perBay(f.width); if (!nP) return;
           var H = T.h, gP = (f.width - nP * 800) / (nP + 1), pw = 800 * s3, pd = 1200 * s3, ph = H * s3, zT = zBase + ph, py = y0 + (dpx - pd) / 2, bp = Math.min(ph, 144 * s3);
@@ -1591,9 +1592,12 @@ class Component extends DCLogic {
         });
         if (isFront && frontOK && ii === frontII && side === sides - 1) {
           dims.push(frontH(xx + uwk, bwp, 450, fmt(f.width) + ' mm'));
-          if (k === 0 && f.levels.length) {
-            var zc = 0;
-            f.levels.forEach(function (lv) { dims.push(frontV(pxo, (zc + lv.gap) * s3, lv.gap * s3, 450, fmt(lv.gap) + ' mm')); zc += lv.gap; });
+          var isoK = ISOF && ISOF.k === k;
+          if ((k === 0 || isoK) && f.levels.length) {
+            var zc = 0, xV = isoK ? xx : pxo;
+            f.levels.forEach(function (lv) { dims.push(frontV(xV, (zc + lv.gap) * s3, lv.gap * s3, 450, fmt(lv.gap) + ' mm')); zc += lv.gap; });
+            // isoliertes Feld: zusätzlich Gesamthöhe (Rahmen) als äußere Maßkette
+            if (isoK) { var hIso = Math.max(r.frames[k].height, r.frames[k + 1].height); dims.push(frontV(xV, hIso * s3, hIso * s3, 1100, fmt(hIso) + ' mm')); }
           }
         }
         xx += uwk + bwp;
@@ -1622,7 +1626,7 @@ class Component extends DCLogic {
     });
     if (ISOF && CTR.f[ISOF.ri + ':' + ISOF.k]) {
       var cI = CTR.f[ISOF.ri + ':' + ISOF.k], tI = cI.a === 90 || cI.a === 270, lxI = tI ? cI.D : cI.L, dyI = tI ? cI.L : cI.D;
-      self._bb = { x0: cI.x - lxI / 2, x1: cI.x + lxI / 2, y0: cI.y - dyI / 2, y1: cI.y + dyI / 2, h: cI.h };
+      self._bb = { x0: cI.x - lxI / 2, x1: cI.x + lxI / 2, y0: cI.y - dyI / 2, y1: cI.y + dyI / 2, h: Math.max(cI.h, self._bb.h || 0) };
     }
     var GR = Math.min(60000 * s3, 7000), gMaj = 1000 * s3, gMin = 250 * s3;
     var grid = { w: 2 * GR + maxLen * s3, h: 2 * GR + depthTot * s3, tf: Tr(-GR, -GR, -3), major: gMaj, minor: gMin, off: (GR % gMaj) };
@@ -1676,6 +1680,28 @@ class Component extends DCLogic {
         tf: 'translate3d(' + ((cxMM - pwMM / 2) * s3) + 'px,' + ((cyMM - phMM / 2) * s3) + 'px,-0.5px) rotateZ(' + (PL.rot || 0) + 'deg)' };
     }
     var FOC = st.focus || null; self._rt = { rot: effRot, tilt: effTilt };
+    // Einpassen: Anlage inkl. Bemaßungen und Paletten in die freie Zeichenfläche (rechts vom Menü, unter der Werkzeugleiste)
+    self._fit = function () {
+      var B = self._bb; if (!B || B.x1 < B.x0) return;
+      var S = self.state, v = self._vw, el = document.querySelector('[data-stage]');
+      var W = el ? el.offsetWidth : 1400, H = el ? el.offsetHeight : 780, L = 330, T = 60, Bm = 34, Rm = S.bomOn ? 400 : 20;
+      var Wt = Math.max(200, W - L - Rm - 30), Ht = Math.max(200, H - T - Bm - 20), sT, fx, fy, fz;
+      var w = B.x1 - B.x0, d = B.y1 - B.y0, h = B.h;
+      if (v === 'front') {
+        sT = Math.min(Wt / (w + 1900), Ht / (h + 1900)); fx = (B.x0 - 1600 + B.x1 + 300) / 2; fy = (B.y0 + B.y1) / 2; fz = (h + 300 - 1600) / 2;
+      } else if (v === 'top') {
+        sT = Math.min(Wt / (w + 2000), Ht / (d + 2300)); fx = (B.x0 - 1700 + B.x1 + 300) / 2; fy = (B.y0 - 300 + B.y1 + 2000) / 2; fz = 0;
+      } else {
+        var aR = (self._rt ? self._rt.rot : -32) * Math.PI / 180, tR = (self._rt ? self._rt.tilt : 58) * Math.PI / 180;
+        var pw = w * Math.abs(Math.cos(aR)) + d * Math.abs(Math.sin(aR)), pd = w * Math.abs(Math.sin(aR)) + d * Math.abs(Math.cos(aR));
+        sT = Math.min(Wt / (pw + 2000), Ht / (pd * Math.cos(tR) + h * Math.sin(tR) + 1500)); fx = (B.x0 + B.x1) / 2; fy = (B.y0 + B.y1) / 2; fz = h / 3;
+      }
+      // Szene-Ursprung liegt bei 50 % / 60 % der Bühne (+ Versatz): Pan so wählen, dass der Mittelpunkt in der freien Fläche sitzt
+      var ox = W / 2 + (S.bomOn ? -30 : 160), oy = H * 0.6 + (v === 'top' ? -120 : v === 'front' ? 120 : 0);
+      var cx = L + Wt / 2 + 15, cy = T + Ht / 2 + 10;
+      self.setState({ focus: { x: fx, y: fy, z: fz }, zoom: Math.max(0.1, Math.min(6, sT / (self._base || 1))), pan: { x: cx - ox, y: cy - oy } });
+    };
+    if (st.fitPending) { setTimeout(function () { self.state.fitPending = false; self._fit(); }, 0); }
     // Projektion Welt(mm) -> Bühne(px) für das Bemaßungswerkzeug
     self._proj = { F: FOC ? { x: FOC.x, y: FOC.y, z: isTop ? 0 : FOC.z } : { x: maxLen / 2, y: depthTot / 2, z: isFront ? maxH / 2 : 0 },
       s3: s3, rot: effRot, tilt: effTilt, tx: (st.bomOn ? -30 : 160) + (st.pan ? st.pan.x : 0), ty: (isTop ? -120 : isFront ? 120 : 0) + (st.pan ? st.pan.y : 0), P: vw === '3d' ? 1800 : 0, view: vw, yFront: yFrontPx / s3 };
@@ -1707,7 +1733,7 @@ class Component extends DCLogic {
 
     // Eigenschaften
     // Kontextmenü fest am linken Rand der 3D-Ansicht, unter der Hinweisleiste
-    var menu = { x: 12, y: 56, maxH: 730 };
+    var menu = { x: 12, y: ISO !== null ? 100 : 56, maxH: ISO !== null ? 686 : 730 };
     function crumb(label, target, active) { return { label: label, bg: active ? '#16202A' : '#EEF1F4', fg: active ? '#FFFFFF' : '#16202A', pick: function () { select(target); } }; }
     var ins = { none: !sel, any: !!sel, isPlant: !sel, isFrame: false, isField: false, isLevel: false, isRow: false, warn: false, hasScope: false,
       crumbs: [crumb('Anlage', null, !sel)], kindLabel: 'Anlage', title: 'Anlage', scope: '' };
@@ -2428,7 +2454,7 @@ class Component extends DCLogic {
       persp: vw === '3d' ? '1800px' : 'none',
       viewOpts: [['3d', '3D'], ['top', 'Draufsicht'], ['front', 'Vorderansicht']].map(function (v) {
         var on = vw === v[0];
-        return { label: v[1], pressed: on ? 'true' : 'false', bg: on ? '#16202A' : '#FFFFFF', fg: on ? '#FFFFFF' : '#16202A', pick: function () { self.setState({ view: v[0], pan: { x: 0, y: 0 } }); } };
+        return { label: v[1], pressed: on ? 'true' : 'false', bg: on ? '#16202A' : '#FFFFFF', fg: on ? '#FFFFFF' : '#16202A', pick: function () { self.setState({ view: v[0], pan: { x: 0, y: 0 }, fitPending: true }); } };
       }),
       rotL: function () { self.setState({ rot: st.rot - 15, view: '3d' }); },
       rotR: function () { self.setState({ rot: st.rot + 15, view: '3d' }); },
@@ -2512,19 +2538,7 @@ class Component extends DCLogic {
         setTimeout(function () { if (self._d3 === d) self._d3 = null; }, 0);
       },
       p3Wheel: function (e) { self.setState({ zoom: Math.max(0.5, Math.min(6, st.zoom * Math.exp(-e.deltaY * 0.0012))) }); },
-      fitAll: function () {
-        // Ganze Anlage optimal in der Zeichenfläche ausrichten
-        var B = self._bb; if (!B || B.x1 < B.x0) return;
-        var w = B.x1 - B.x0, d = B.y1 - B.y0, h = B.h, Wt = 980, Ht = 640, sT, v = self._vw;
-        if (v === 'top') sT = Math.min(Wt / (w + 2500), Ht / (d + 2500));
-        else if (v === 'front') sT = Math.min(Wt / (w + 2500), Ht / (h + 1500));
-        else {
-          var a = (self._rt ? self._rt.rot : -32) * Math.PI / 180, t = (self._rt ? self._rt.tilt : 58) * Math.PI / 180;
-          var pw = w * Math.abs(Math.cos(a)) + d * Math.abs(Math.sin(a)), pd = w * Math.abs(Math.sin(a)) + d * Math.abs(Math.cos(a));
-          sT = Math.min(Wt / (pw + 2000), Ht / (pd * Math.cos(t) + h * Math.sin(t) + 1500));
-        }
-        self.setState({ focus: { x: (B.x0 + B.x1) / 2, y: (B.y0 + B.y1) / 2, z: v === 'front' ? h / 2 : h / 3 }, zoom: Math.max(0.2, Math.min(6, sT / (self._base || 1))), pan: { x: 0, y: 0 } });
-      },
+      fitAll: function () { self._fit(); },
       p3Bg: function () { if (self._d3 && self._d3.moved) return; if (st.sel) self.setState({ sel: null, multi: [] }); }
     };
   }
