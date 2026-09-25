@@ -2,15 +2,18 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>Regalplaner</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
 <style>
-html,body{height:100%;overflow:auto}
+html,body{height:100%;margin:0;overflow:hidden;overscroll-behavior:none;touch-action:manipulation;-webkit-text-size-adjust:100%}
+#app{position:fixed;left:0;top:0;transform-origin:0 0;transform:scale(var(--app-s,1))}
 @media print {
   @page { size: A4 landscape; margin: 0; }
   html, body { background: #FFFFFF !important; overflow: visible !important; height: auto !important; }
-  .app-root { width: auto !important; height: auto !important; min-width: 0 !important; min-height: 0 !important; display: block !important; background: #FFFFFF !important; }
+  #app { position: static !important; transform: none !important; }
+  .app-root { width: auto !important; height: auto !important; display: block !important; background: #FFFFFF !important; }
   .app-root > * { display: none !important; }
   .app-root > .ds-overlay { display: block !important; position: static !important; background: #FFFFFF !important; }
   .ds-bar { display: none !important; }
@@ -31,7 +34,7 @@ button:disabled{opacity:.35;cursor:default}
 <body>
 <div id="app"></div>
 <template id="tpl">
-<div class="app-root" style="position: relative; width: 100vw; height: 100vh; min-width: 1280px; min-height: 760px; box-sizing: border-box; display: flex; flex-direction: column; background: #E9EDF1">
+<div class="app-root" style="position: relative; width: var(--app-w, 100vw); height: var(--app-h, 100vh); box-sizing: border-box; display: flex; flex-direction: column; background: #E9EDF1">
 
   <!-- Kopfzeile -->
   <div style="height: 64px; box-sizing: border-box; padding: 0 24px; display: flex; align-items: center; gap: 24px; background: #16202A; color: #F3F5F7">
@@ -57,7 +60,7 @@ button:disabled{opacity:.35;cursor:default}
     <!-- Mitte: 3D -->
     <div data-stage="1" onContextMenu="{{noCtx}}" onPointerDown="{{p3Down}}" onPointerMove="{{p3Move}}" onPointerUp="{{p3Up}}" onPointerCancel="{{p3Up}}" onWheel="{{p3Wheel}}" onClick="{{p3Bg}}" style="flex-grow: 1; min-width: 0; position: relative; overflow: hidden; border-radius: 8px; background: linear-gradient(180deg, #FFFFFF 0%, #EEF1F4 55%, #E3E8EC 100%); cursor: {{stageCursor}}; user-select: none; touch-action: none">
       <div style="position: absolute; inset: 0; overflow: hidden; perspective: {{persp}}; z-index: 0; isolation: isolate">
-      <div style="position: absolute; left: 50%; top: 60%; width: 0; height: 0; transform-style: preserve-3d; transform: {{scene.tf}}">
+      <div style="position: absolute; left: 50%; top: 60%; width: 0; height: 0; transform-style: preserve-3d; will-change: transform; transform: {{scene.tf}}">
         <sc-for list="{{scene.parts}}" as="p" hint-placeholder-count="20">
           <div onClick="{{p.pick}}" title="{{p.title}}" data-hk="{{p.hk}}" style="pointer-events: {{p.pe}}; position: absolute; left: 0; top: 0; box-sizing: border-box; width: {{p.w}}px; height: {{p.h}}px; background: {{p.bg}}; border: {{p.bd}}; box-shadow: {{p.sh}}; transform-origin: 0 0; transform: {{p.tf}}; cursor: pointer"></div>
         </sc-for>
@@ -249,18 +252,33 @@ button:disabled{opacity:.35;cursor:default}
             </div>
             <div style="display: flex; flex-direction: column; gap: 6px">
               <span style="font-size: 12px; font-weight: 600; color: #4A5866">Ebenenausstattung <span style="font-weight: 400">· gesamte Anlage{{plantDeckMixed}}</span></span>
-              <select id="sel_plantDeckOpts" value="{{plantDeckOpts.val}}" onChange="{{plantDeckOpts.change}}" aria-label="Ebenenausstattung" style="height: 32px; border: 1px solid #CBD3DA; border-radius: 4px; padding: 0 8px; font-size: 13px; color: #16202A; background: #FFFFFF; cursor: pointer"><option value="" disabled="{{plantDeckOpts.notMixed}}">– gemischt –</option><option value="Ohne">Ohne</option><option value="Gitterrost">Gitterrost</option><option value="Drahtgitter">Drahtgitter</option><option value="Spanplatte">Spanplatte</option></select>
+              <select data-options="{{optDeck}}" id="sel_plantDeckOpts" value="{{plantDeckOpts.val}}" onChange="{{plantDeckOpts.change}}" aria-label="Ebenenausstattung" style="height: 32px; border: 1px solid #CBD3DA; border-radius: 4px; padding: 0 8px; font-size: 13px; color: #16202A; background: #FFFFFF; cursor: pointer"><option value="" disabled="{{plantDeckOpts.notMixed}}">– gemischt –</option></select>
             </div>
             <div style="display: flex; flex-direction: column; gap: 6px">
               <span style="font-size: 12px; font-weight: 600; color: #4A5866">Traversenfarbe <span style="font-weight: 400">· gesamte Anlage{{plantColorMixed}}</span></span>
               <div style="display: flex; align-items: center; gap: 8px">
                 <span aria-hidden="true" style="width: 28px; height: 28px; flex-shrink: 0; border-radius: 4px; background: {{plantColorOpts.hex}}; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.18)"></span>
-                <select id="ral_plantColorOpts" value="{{plantColorOpts.val}}" onChange="{{plantColorOpts.change}}" aria-label="Traversenfarbe" style="flex-grow: 1; height: 32px; border: 1px solid #CBD3DA; border-radius: 4px; padding: 0 8px; font-size: 13px; color: #16202A; background: #FFFFFF; cursor: pointer"><option value="" disabled="{{plantColorOpts.notMixed}}">– gemischt –</option><option value="5010">RAL 5010 Enzianblau</option><option value="1003">RAL 1003 Signalgelb</option><option value="3000">RAL 3000 Feuerrot</option><option value="6011">RAL 6011 Resedagrün</option><option value="7035">RAL 7035 Lichtgrau</option></select>
+                <select data-options="{{optRal}}" id="ral_plantColorOpts" value="{{plantColorOpts.val}}" onChange="{{plantColorOpts.change}}" aria-label="Traversenfarbe" style="flex-grow: 1; height: 32px; border: 1px solid #CBD3DA; border-radius: 4px; padding: 0 8px; font-size: 13px; color: #16202A; background: #FFFFFF; cursor: pointer"><option value="" disabled="{{plantColorOpts.notMixed}}">– gemischt –</option></select>
               </div>
             </div>
             <div style="display: flex; flex-direction: column; gap: 6px">
               <span style="font-size: 12px; font-weight: 600; color: #4A5866">Traversenprofil (Höhe) <span style="font-weight: 400">· gesamte Anlage{{plantProfMixed}}</span></span>
-              <select id="sel_plantProfOpts" value="{{plantProfOpts.val}}" onChange="{{plantProfOpts.change}}" aria-label="Traversenprofil" style="height: 32px; border: 1px solid #CBD3DA; border-radius: 4px; padding: 0 8px; font-size: 13px; color: #16202A; background: #FFFFFF; cursor: pointer"><option value="" disabled="{{plantProfOpts.notMixed}}">– gemischt –</option><option value="95">95 mm</option><option value="110">110 mm</option><option value="120">120 mm</option><option value="130">130 mm</option><option value="150">150 mm</option><option value="170">170 mm</option></select>
+              <select data-options="{{optProf}}" id="sel_plantProfOpts" value="{{plantProfOpts.val}}" onChange="{{plantProfOpts.change}}" aria-label="Traversenprofil" style="height: 32px; border: 1px solid #CBD3DA; border-radius: 4px; padding: 0 8px; font-size: 13px; color: #16202A; background: #FFFFFF; cursor: pointer"><option value="" disabled="{{plantProfOpts.notMixed}}">– gemischt –</option></select>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px; padding: 9px 10px; border: 1px solid #CBD3DA; border-radius: 6px; background: #F7F9FB">
+              <span style="font-size: 12px; font-weight: 600; color: #4A5866">Parameter &amp; Regeln (Excel)</span>
+              <span style="font-size: 11.5px; color: #16202A">{{paramSrc}}</span>
+              <sc-if value="{{paramHasMsgs}}" hint-placeholder-val="{{false}}">
+                <div style="display: flex; flex-direction: column; gap: 2px; font-size: 11px; color: #8E1F12; background: #FDE7E3; padding: 6px 8px; border-radius: 4px">
+                  <sc-for list="{{paramMsgs}}" as="pm" hint-placeholder-count="1"><span>{{pm.t}}</span></sc-for>
+                </div>
+              </sc-if>
+              <div style="display: flex; gap: 6px">
+                <label style="flex: 1; position: relative; height: 30px; display: grid; place-items: center; border: 1px solid #16202A; border-radius: 4px; background: #FFFFFF; cursor: pointer; font-size: 12px; font-weight: 600">Excel laden …
+                  <input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange="{{paramFile}}" style="position: absolute; inset: 0; opacity: 0; cursor: pointer">
+                </label>
+                <a href="parameter.xlsx" download="parameter.xlsx" style="flex: 1; height: 30px; display: grid; place-items: center; border: 1px solid #CBD3DA; border-radius: 4px; background: #FFFFFF; color: #16202A; font-size: 12px; text-decoration: none">Vorlage herunterladen</a>
+              </div>
             </div>
             <div style="display: flex; flex-direction: column; gap: 6px; padding: 9px 10px; border: 1px solid #E3D6BF; border-radius: 6px">
               <span style="font-size: 12px; font-weight: 600; color: #5A4326">Palettentypen dieser Anlage <span style="font-weight: 400">· Europalette 800 × 1200</span></span>
@@ -268,8 +286,8 @@ button:disabled{opacity:.35;cursor:default}
                 <div style="display: grid; grid-template-columns: 14px 26px minmax(0, 1fr) minmax(0, 1fr) 30px 22px; gap: 5px; align-items: center">
                   <span style="width: 14px; height: 14px; border-radius: 3px; background: {{pt.color}}"></span>
                   <span style="font-weight: 700; font-size: 12px">{{pt.id}}</span>
-                  <select value="{{pt.hSel.val}}" onChange="{{pt.hSel.change}}" aria-label="Höhe inkl. Palette" style="height: 28px; border: 1px solid #CBD3DA; border-radius: 4px; font-size: 12px; background: #FFFFFF; color: #16202A"><option value="800">800 mm</option><option value="1000">1.000 mm</option><option value="1100">1.100 mm</option><option value="1200">1.200 mm</option><option value="1300">1.300 mm</option><option value="1400">1.400 mm</option><option value="1500">1.500 mm</option><option value="1600">1.600 mm</option><option value="1800">1.800 mm</option><option value="2000">2.000 mm</option></select>
-                  <select value="{{pt.wSel.val}}" onChange="{{pt.wSel.change}}" aria-label="Gewicht" style="height: 28px; border: 1px solid #CBD3DA; border-radius: 4px; font-size: 12px; background: #FFFFFF; color: #16202A"><option value="250">250 kg</option><option value="500">500 kg</option><option value="750">750 kg</option><option value="800">800 kg</option><option value="1000">1.000 kg</option><option value="1250">1.250 kg</option><option value="1500">1.500 kg</option></select>
+                  <select data-options="{{optPalH}}" value="{{pt.hSel.val}}" onChange="{{pt.hSel.change}}" aria-label="Höhe inkl. Palette" style="height: 28px; border: 1px solid #CBD3DA; border-radius: 4px; font-size: 12px; background: #FFFFFF; color: #16202A"></select>
+                  <select data-options="{{optPalW}}" value="{{pt.wSel.val}}" onChange="{{pt.wSel.change}}" aria-label="Gewicht" style="height: 28px; border: 1px solid #CBD3DA; border-radius: 4px; font-size: 12px; background: #FFFFFF; color: #16202A"></select>
                   <span class="mono" style="font-size: 11px; color: #4A5866; text-align: right">{{pt.n}}</span>
                   <button type="button" onClick="{{pt.remove}}" aria-label="Palettentyp löschen" title="Palettentyp löschen" style="width: 22px; height: 22px; border: 0; background: transparent; color: #8E1F12; cursor: pointer; font-size: 15px">×</button>
                 </div>
@@ -354,7 +372,7 @@ button:disabled{opacity:.35;cursor:default}
             <button type="button" onClick="{{ins.toggleFIso}}" aria-pressed="{{ins.fIsIso}}" style="height: 34px; border: 1px solid #16202A; border-radius: 5px; cursor: pointer; font-size: 12.5px; font-weight: 600; background: {{ins.fIsoBg}}; color: {{ins.fIsoFg}}">{{ins.fIsoLabel}}</button>
             <div style="display: flex; flex-direction: column; gap: 6px">
               <span style="font-size: 12px; font-weight: 600; color: #4A5866">Feldart</span>
-              <select id="fieldArt" value="{{ins.art}}" onChange="{{ins.setArt}}" aria-label="Feldart" style="height: 32px; border: 1px solid #CBD3DA; border-radius: 4px; padding: 0 8px; font-size: 13px; color: #16202A; background: #FFFFFF; cursor: pointer"><option value="Bodenlagerung">Bodenlagerung</option><option value="Bodennahe Traverse">Bodennahe Traverse</option><option value="Durchgang">Durchgang</option><option value="Durchfahrt">Durchfahrt</option></select>
+              <select data-options="{{optArt}}" id="fieldArt" value="{{ins.art}}" onChange="{{ins.setArt}}" aria-label="Feldart" style="height: 32px; border: 1px solid #CBD3DA; border-radius: 4px; padding: 0 8px; font-size: 13px; color: #16202A; background: #FFFFFF; cursor: pointer"></select>
               <span style="font-size: 11.5px; color: #4A5866">{{ins.artHint}}</span>
               <sc-if value="{{ins.artWarn}}" hint-placeholder-val="{{false}}">
                 <div style="display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; background: #FDE7E3; color: #8E1F12; padding: 8px 10px; border-radius: 4px">
@@ -395,18 +413,18 @@ button:disabled{opacity:.35;cursor:default}
             </div>
             <div style="display: flex; flex-direction: column; gap: 6px">
               <span style="font-size: 12px; font-weight: 600; color: #4A5866">Ebenenausstattung <span style="font-weight: 400">· alle Ebenen dieses Felds{{ins.fieldDeckMixed}}</span></span>
-              <select id="sel_ins_fieldDeckOpts" value="{{ins.fieldDeckOpts.val}}" onChange="{{ins.fieldDeckOpts.change}}" aria-label="Ebenenausstattung" style="height: 32px; border: 1px solid #CBD3DA; border-radius: 4px; padding: 0 8px; font-size: 13px; color: #16202A; background: #FFFFFF; cursor: pointer"><option value="" disabled="{{ins.fieldDeckOpts.notMixed}}">– gemischt –</option><option value="Ohne">Ohne</option><option value="Gitterrost">Gitterrost</option><option value="Drahtgitter">Drahtgitter</option><option value="Spanplatte">Spanplatte</option></select>
+              <select data-options="{{optDeck}}" id="sel_ins_fieldDeckOpts" value="{{ins.fieldDeckOpts.val}}" onChange="{{ins.fieldDeckOpts.change}}" aria-label="Ebenenausstattung" style="height: 32px; border: 1px solid #CBD3DA; border-radius: 4px; padding: 0 8px; font-size: 13px; color: #16202A; background: #FFFFFF; cursor: pointer"><option value="" disabled="{{ins.fieldDeckOpts.notMixed}}">– gemischt –</option></select>
             </div>
             <div style="display: flex; flex-direction: column; gap: 6px">
               <span style="font-size: 12px; font-weight: 600; color: #4A5866">Traversenfarbe <span style="font-weight: 400">· alle Ebenen dieses Felds{{ins.fieldColorMixed}}</span></span>
               <div style="display: flex; align-items: center; gap: 8px">
                 <span aria-hidden="true" style="width: 28px; height: 28px; flex-shrink: 0; border-radius: 4px; background: {{ins.fieldColorOpts.hex}}; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.18)"></span>
-                <select id="ral_ins_fieldColorOpts" value="{{ins.fieldColorOpts.val}}" onChange="{{ins.fieldColorOpts.change}}" aria-label="Traversenfarbe" style="flex-grow: 1; height: 32px; border: 1px solid #CBD3DA; border-radius: 4px; padding: 0 8px; font-size: 13px; color: #16202A; background: #FFFFFF; cursor: pointer"><option value="" disabled="{{ins.fieldColorOpts.notMixed}}">– gemischt –</option><option value="5010">RAL 5010 Enzianblau</option><option value="1003">RAL 1003 Signalgelb</option><option value="3000">RAL 3000 Feuerrot</option><option value="6011">RAL 6011 Resedagrün</option><option value="7035">RAL 7035 Lichtgrau</option></select>
+                <select data-options="{{optRal}}" id="ral_ins_fieldColorOpts" value="{{ins.fieldColorOpts.val}}" onChange="{{ins.fieldColorOpts.change}}" aria-label="Traversenfarbe" style="flex-grow: 1; height: 32px; border: 1px solid #CBD3DA; border-radius: 4px; padding: 0 8px; font-size: 13px; color: #16202A; background: #FFFFFF; cursor: pointer"><option value="" disabled="{{ins.fieldColorOpts.notMixed}}">– gemischt –</option></select>
               </div>
             </div>
             <div style="display: flex; flex-direction: column; gap: 6px">
               <span style="font-size: 12px; font-weight: 600; color: #4A5866">Traversenprofil (Höhe) <span style="font-weight: 400">· alle Ebenen dieses Felds{{ins.fieldProfMixed}}</span></span>
-              <select id="sel_ins_fieldProfOpts" value="{{ins.fieldProfOpts.val}}" onChange="{{ins.fieldProfOpts.change}}" aria-label="Traversenprofil" style="height: 32px; border: 1px solid #CBD3DA; border-radius: 4px; padding: 0 8px; font-size: 13px; color: #16202A; background: #FFFFFF; cursor: pointer"><option value="" disabled="{{ins.fieldProfOpts.notMixed}}">– gemischt –</option><option value="95">95 mm</option><option value="110">110 mm</option><option value="120">120 mm</option><option value="130">130 mm</option><option value="150">150 mm</option><option value="170">170 mm</option></select>
+              <select data-options="{{optProf}}" id="sel_ins_fieldProfOpts" value="{{ins.fieldProfOpts.val}}" onChange="{{ins.fieldProfOpts.change}}" aria-label="Traversenprofil" style="height: 32px; border: 1px solid #CBD3DA; border-radius: 4px; padding: 0 8px; font-size: 13px; color: #16202A; background: #FFFFFF; cursor: pointer"><option value="" disabled="{{ins.fieldProfOpts.notMixed}}">– gemischt –</option></select>
             </div>
             <div style="display: flex; flex-direction: column; gap: 6px">
               <span style="font-size: 12px; font-weight: 600; color: #4A5866">Aufbau eines anderen Typs übernehmen</span>
@@ -470,18 +488,18 @@ button:disabled{opacity:.35;cursor:default}
             </div>
             <div style="display: flex; flex-direction: column; gap: 6px">
               <span style="font-size: 12px; font-weight: 600; color: #4A5866">Ebenenausstattung</span>
-              <select id="sel_ins_deckOpts" value="{{ins.deckOpts.val}}" onChange="{{ins.deckOpts.change}}" aria-label="Ebenenausstattung" style="height: 32px; border: 1px solid #CBD3DA; border-radius: 4px; padding: 0 8px; font-size: 13px; color: #16202A; background: #FFFFFF; cursor: pointer"><option value="" disabled="{{ins.deckOpts.notMixed}}">– gemischt –</option><option value="Ohne">Ohne</option><option value="Gitterrost">Gitterrost</option><option value="Drahtgitter">Drahtgitter</option><option value="Spanplatte">Spanplatte</option></select>
+              <select data-options="{{optDeck}}" id="sel_ins_deckOpts" value="{{ins.deckOpts.val}}" onChange="{{ins.deckOpts.change}}" aria-label="Ebenenausstattung" style="height: 32px; border: 1px solid #CBD3DA; border-radius: 4px; padding: 0 8px; font-size: 13px; color: #16202A; background: #FFFFFF; cursor: pointer"><option value="" disabled="{{ins.deckOpts.notMixed}}">– gemischt –</option></select>
             </div>
             <div style="display: flex; flex-direction: column; gap: 6px">
               <span style="font-size: 12px; font-weight: 600; color: #4A5866">Traversenfarbe <span style="font-weight: 400">{{ins.colorNote}}</span></span>
               <div style="display: flex; align-items: center; gap: 8px">
                 <span aria-hidden="true" style="width: 28px; height: 28px; flex-shrink: 0; border-radius: 4px; background: {{ins.colorOpts.hex}}; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.18)"></span>
-                <select id="ral_ins_colorOpts" value="{{ins.colorOpts.val}}" onChange="{{ins.colorOpts.change}}" aria-label="Traversenfarbe" style="flex-grow: 1; height: 32px; border: 1px solid #CBD3DA; border-radius: 4px; padding: 0 8px; font-size: 13px; color: #16202A; background: #FFFFFF; cursor: pointer"><option value="" disabled="{{ins.colorOpts.notMixed}}">– gemischt –</option><option value="5010">RAL 5010 Enzianblau</option><option value="1003">RAL 1003 Signalgelb</option><option value="3000">RAL 3000 Feuerrot</option><option value="6011">RAL 6011 Resedagrün</option><option value="7035">RAL 7035 Lichtgrau</option></select>
+                <select data-options="{{optRal}}" id="ral_ins_colorOpts" value="{{ins.colorOpts.val}}" onChange="{{ins.colorOpts.change}}" aria-label="Traversenfarbe" style="flex-grow: 1; height: 32px; border: 1px solid #CBD3DA; border-radius: 4px; padding: 0 8px; font-size: 13px; color: #16202A; background: #FFFFFF; cursor: pointer"><option value="" disabled="{{ins.colorOpts.notMixed}}">– gemischt –</option></select>
               </div>
             </div>
             <div style="display: flex; flex-direction: column; gap: 6px">
               <span style="font-size: 12px; font-weight: 600; color: #4A5866">Traversenprofil (Höhe) <span style="font-weight: 400">{{ins.profNote}}</span></span>
-              <select id="sel_ins_profOpts" value="{{ins.profOpts.val}}" onChange="{{ins.profOpts.change}}" aria-label="Traversenprofil" style="height: 32px; border: 1px solid #CBD3DA; border-radius: 4px; padding: 0 8px; font-size: 13px; color: #16202A; background: #FFFFFF; cursor: pointer"><option value="" disabled="{{ins.profOpts.notMixed}}">– gemischt –</option><option value="95">95 mm</option><option value="110">110 mm</option><option value="120">120 mm</option><option value="130">130 mm</option><option value="150">150 mm</option><option value="170">170 mm</option></select>
+              <select data-options="{{optProf}}" id="sel_ins_profOpts" value="{{ins.profOpts.val}}" onChange="{{ins.profOpts.change}}" aria-label="Traversenprofil" style="height: 32px; border: 1px solid #CBD3DA; border-radius: 4px; padding: 0 8px; font-size: 13px; color: #16202A; background: #FFFFFF; cursor: pointer"><option value="" disabled="{{ins.profOpts.notMixed}}">– gemischt –</option></select>
             </div>
             <div data-palblock="1" style="display: flex; flex-direction: column; gap: 6px; padding: 9px 10px; background: #F6F1E7; border-radius: 6px">
               <span style="font-size: 12px; font-weight: 600; color: #5A4326">Palette zuordnen <span style="font-weight: 400"> {{ins.levelPal.note}}</span></span>
@@ -601,12 +619,12 @@ button:disabled{opacity:.35;cursor:default}
               <span style="font-size: 12px; font-weight: 600; color: #4A5866">Traversenfarbe <span style="font-weight: 400">· ganze Reihe{{ins.rowColorMixed}}</span></span>
               <div style="display: flex; align-items: center; gap: 8px">
                 <span aria-hidden="true" style="width: 28px; height: 28px; flex-shrink: 0; border-radius: 4px; background: {{ins.rowColorOpts.hex}}; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.18)"></span>
-                <select id="ral_ins_rowColorOpts" value="{{ins.rowColorOpts.val}}" onChange="{{ins.rowColorOpts.change}}" aria-label="Traversenfarbe" style="flex-grow: 1; height: 32px; border: 1px solid #CBD3DA; border-radius: 4px; padding: 0 8px; font-size: 13px; color: #16202A; background: #FFFFFF; cursor: pointer"><option value="" disabled="{{ins.rowColorOpts.notMixed}}">– gemischt –</option><option value="5010">RAL 5010 Enzianblau</option><option value="1003">RAL 1003 Signalgelb</option><option value="3000">RAL 3000 Feuerrot</option><option value="6011">RAL 6011 Resedagrün</option><option value="7035">RAL 7035 Lichtgrau</option></select>
+                <select data-options="{{optRal}}" id="ral_ins_rowColorOpts" value="{{ins.rowColorOpts.val}}" onChange="{{ins.rowColorOpts.change}}" aria-label="Traversenfarbe" style="flex-grow: 1; height: 32px; border: 1px solid #CBD3DA; border-radius: 4px; padding: 0 8px; font-size: 13px; color: #16202A; background: #FFFFFF; cursor: pointer"><option value="" disabled="{{ins.rowColorOpts.notMixed}}">– gemischt –</option></select>
               </div>
             </div>
             <div style="display: flex; flex-direction: column; gap: 6px">
               <span style="font-size: 12px; font-weight: 600; color: #4A5866">Traversenprofil (Höhe) <span style="font-weight: 400">· ganze Reihe{{ins.rowProfMixed}}</span></span>
-              <select id="sel_ins_rowProfOpts" value="{{ins.rowProfOpts.val}}" onChange="{{ins.rowProfOpts.change}}" aria-label="Traversenprofil" style="height: 32px; border: 1px solid #CBD3DA; border-radius: 4px; padding: 0 8px; font-size: 13px; color: #16202A; background: #FFFFFF; cursor: pointer"><option value="" disabled="{{ins.rowProfOpts.notMixed}}">– gemischt –</option><option value="95">95 mm</option><option value="110">110 mm</option><option value="120">120 mm</option><option value="130">130 mm</option><option value="150">150 mm</option><option value="170">170 mm</option></select>
+              <select data-options="{{optProf}}" id="sel_ins_rowProfOpts" value="{{ins.rowProfOpts.val}}" onChange="{{ins.rowProfOpts.change}}" aria-label="Traversenprofil" style="height: 32px; border: 1px solid #CBD3DA; border-radius: 4px; padding: 0 8px; font-size: 13px; color: #16202A; background: #FFFFFF; cursor: pointer"><option value="" disabled="{{ins.rowProfOpts.notMixed}}">– gemischt –</option></select>
             </div>
             <div style="display: flex; align-items: center; justify-content: space-between">
               <span style="font-size: 12px; font-weight: 600; color: #4A5866">Anzahl dieser Reihe</span>
@@ -715,6 +733,7 @@ button:disabled{opacity:.35;cursor:default}
     </div>
   </sc-if>
 </div>
+
 </template>
 <script>
 !function(n,t){"object"==typeof exports&&"undefined"!=typeof module?t(exports):"function"==typeof define&&define.amd?define(["exports"],t):t((n||self).preact={})}(this,function(n){var t,i,e,r,f,o,u,c,s,a,h,l,p,y,v,d,w="http://www.w3.org/2000/svg",_="http://www.w3.org/1999/xhtml",g=null,m=void 0,b={},k=[],x=/acit|ex(?:s|g|n|p|$)|rph|grid|ows|mnc|ntw|ine[ch]|zoo|^ord|itera/i,M=Array.isArray;function S(n,t){for(var i in t)n[i]=t[i];return n}function T(n){n&&n.parentNode&&n.parentNode.removeChild(n)}function $(n,i,e){var r,f,o,u={};for(o in i)"key"==o?r=i[o]:"ref"==o?f=i[o]:u[o]=i[o];if(arguments.length>2&&(u.children=arguments.length>3?t.call(arguments,2):e),"function"==typeof n&&n.defaultProps!=g)for(o in n.defaultProps)u[o]===m&&(u[o]=n.defaultProps[o]);return C(n,u,r,f,g)}function C(n,t,r,f,o){var u={type:n,props:t,key:r,ref:f,__k:g,__:g,__b:0,__e:g,__c:g,constructor:m,__v:o==g?++e:o,__i:-1,__u:0};return o==g&&i.vnode!=g&&i.vnode(u),u}function I(n){return n.children}function P(n,t){this.props=n,this.context=t}function j(n,t){if(t==g)return n.__?j(n.__,n.__i+1):g;for(var i;t<n.__k.length;t++)if((i=n.__k[t])!=g&&i.__e!=g)return i.__e;return"function"==typeof n.type?j(n):g}function A(n){if(n.__P&&n.__d){var t=n.__v,e=t.__e,r=[],f=[],o=S({},t);o.__v=t.__v+1,i.vnode&&i.vnode(o),E(n.__P,o,t,n.__n,n.__P.namespaceURI,32&t.__u?[e]:g,r,e==g?j(t):e,!!(32&t.__u),f),o.__v=t.__v,o.__.__k[o.__i]=o,J(r,o,f),t.__e=t.__=null,o.__e!=e&&H(o)}}function H(n){if((n=n.__)!=g&&n.__c!=g)return n.__e=n.__c.base=g,n.__k.some(function(t){if(t!=g&&t.__e!=g)return n.__e=n.__c.base=t.__e}),H(n)}function L(n){(!n.__d&&(n.__d=!0)&&f.push(n)&&!F.__r++||o!=i.debounceRendering)&&((o=i.debounceRendering)||u)(F)}function F(){try{for(var n,t=1;f.length;)f.length>t&&f.sort(c),n=f.shift(),t=f.length,A(n)}finally{f.length=F.__r=0}}function O(n,t,i,e,r,f,o,u,c,s,a){var h,l,p,y,v,d,w=e&&e.__k||k,_=t.length;for(c=z(i,t,w,c,_),h=0;h<_;h++)(p=i.__k[h])!=g&&(l=-1!=p.__i&&w[p.__i]||b,p.__i=h,d=E(n,p,l,r,f,o,u,c,s,a),y=p.__e,p.ref&&l.ref!=p.ref&&(l.ref&&R(l.ref,g,p),a.push(p.ref,p.__c||y,p)),v==g&&y!=g&&(v=y),4&p.__u?(c=N(p,c,n),l.__e&&(l.__e=g)):"function"==typeof p.type&&d!==m?c=d:y&&(c=y.nextSibling),p.__u&=-7);return i.__e=v,c}function z(n,t,i,e,r){var f,o,u,c,s,a=i.length,h=a,l=0;for(n.__k=new Array(r),f=0;f<r;f++)(o=t[f])!=g&&"boolean"!=typeof o&&"function"!=typeof o?("string"==typeof o||"number"==typeof o||"bigint"==typeof o||o.constructor==String?o=n.__k[f]=C(g,o,g,g,g):M(o)?o=n.__k[f]=C(I,{children:o},g,g,g):o.constructor===m&&o.__b>0?o=n.__k[f]=C(o.type,o.props,o.key,o.ref?o.ref:g,o.__v):n.__k[f]=o,c=f+l,o.__=n,o.__b=n.__b+1,s=o.__i=V(o,i,c,h),u=g,-1!=s&&(h--,(u=i[s])&&(u.__u|=2)),u==g||u.__v==g?(-1==s&&(r>a?l--:r<a&&l++),"function"!=typeof o.type&&(o.__u|=4)):s!=c&&(s==c-1?l--:s==c+1?l++:(s>c?l--:l++,o.__u|=4))):n.__k[f]=g;if(h)for(f=0;f<a;f++)(u=i[f])!=g&&0==(2&u.__u)&&(u.__e==e&&(e=j(u)),U(u,u));return e}function N(n,t,i){var e,r;if("function"==typeof n.type){for(e=n.__k,r=0;e&&r<e.length;r++)e[r]&&(e[r].__=n,t=N(e[r],t,i));return t}n.__e!=t&&(t&&n.type&&!t.parentNode&&(t=j(n)),t=i.insertBefore(n.__e,t||g));do{t=t&&t.nextSibling}while(t!=g&&8==t.nodeType);return t}function V(n,t,i,e){var r,f,o,u=n.key,c=n.type,s=t[i],a=s!=g&&0==(2&s.__u);if(s===g&&null==u||a&&u==s.key&&c==s.type)return i;if(e>(a?1:0))for(r=i-1,f=i+1;r>=0||f<t.length;)if((s=t[o=r>=0?r--:f++])!=g&&0==(2&s.__u)&&u==s.key&&c==s.type)return o;return-1}function q(n,t,i){"-"==t[0]?n.setProperty(t,i==g?"":i):n[t]=i==g?"":"number"!=typeof i||x.test(t)?i:i+"px"}function B(n,t,i,e,r){var f,o;n:if("style"==t)if("string"==typeof i)n.style.cssText=i;else{if("string"==typeof e&&(n.style.cssText=e=""),e)for(t in e)i&&t in i||q(n.style,t,"");if(i)for(t in i)e&&i[t]==e[t]||q(n.style,t,i[t])}else if("o"==t[0]&&"n"==t[1])f=t!=(t=t.replace(l,"$1")),o=t.toLowerCase(),t=o in n||"onFocusOut"==t||"onFocusIn"==t?o.slice(2):t.slice(2),n.l||(n.l={}),n.l[t+f]=i,i?e?i[h]=e[h]:(i[h]=p,n.addEventListener(t,f?v:y,f)):n.removeEventListener(t,f?v:y,f);else{if(r==w)t=t.replace(/xlink(H|:h)/,"h").replace(/sName$/,"s");else if("width"!=t&&"height"!=t&&"href"!=t&&"list"!=t&&"form"!=t&&"tabIndex"!=t&&"download"!=t&&"rowSpan"!=t&&"colSpan"!=t&&"role"!=t&&"popover"!=t&&t in n)try{n[t]=i==g?"":i;break n}catch(n){}"function"==typeof i||(i==g||!1===i&&"-"!=t[4]?n.removeAttribute(t):n.setAttribute(t,"popover"==t&&1==i?"":i))}}function D(n){return function(t){if(this.l){var e=this.l[t.type+n];if(t[a]==g)t[a]=p++;else if(t[a]<e[h])return;return e(i.event?i.event(t):t)}}}function E(n,t,e,r,f,o,u,c,s,a){var h,l,p,y,v,d,w,_,b,x,$,C,A,H,L,F,z=t.type;if(t.constructor!==m)return g;128&e.__u&&(s=!!(32&e.__u),o=[c=t.__e=e.__e]),(h=i.__b)&&h(t);n:if("function"==typeof z){l=u.length;try{if(b=t.props,x=z.prototype&&z.prototype.render,$=(h=z.contextType)&&r[h.__c],C=h?$?$.props.value:h.__:r,e.__c?_=(p=t.__c=e.__c).__=p.__E:(x?t.__c=p=new z(b,C):(t.__c=p=new P(b,C),p.constructor=z,p.render=W),$&&$.sub(p),p.state||(p.state={}),p.__n=r,y=p.__d=!0,p.__h=[],p._sb=[]),x&&p.__s==g&&(p.__s=p.state),x&&z.getDerivedStateFromProps!=g&&(p.__s==p.state&&(p.__s=S({},p.__s)),S(p.__s,z.getDerivedStateFromProps(b,p.__s))),v=p.props,d=p.state,p.__v=t,y)x&&z.getDerivedStateFromProps==g&&p.componentWillMount!=g&&p.componentWillMount(),x&&p.componentDidMount!=g&&p.__h.push(p.componentDidMount);else{if(x&&z.getDerivedStateFromProps==g&&b!==v&&p.componentWillReceiveProps!=g&&p.componentWillReceiveProps(b,C),t.__v==e.__v||!p.__e&&p.shouldComponentUpdate!=g&&!1===p.shouldComponentUpdate(b,p.__s,C)){t.__v!=e.__v&&(p.props=b,p.state=p.__s,p.__d=!1),t.__e=e.__e,t.__k=e.__k,t.__k.some(function(n){n&&(n.__=t)}),k.push.apply(p.__h,p._sb),p._sb=[],p.__h.length&&u.push(p),c=j(e);break n}p.componentWillUpdate!=g&&p.componentWillUpdate(b,p.__s,C),x&&p.componentDidUpdate!=g&&p.__h.push(function(){p.componentDidUpdate(v,d,w)})}if(p.context=C,p.props=b,p.__P=n,p.__e=!1,A=i.__r,H=0,x)p.state=p.__s,p.__d=!1,A&&A(t),h=p.render(p.props,p.state,p.context),k.push.apply(p.__h,p._sb),p._sb=[];else do{p.__d=!1,A&&A(t),h=p.render(p.props,p.state,p.context),p.state=p.__s}while(p.__d&&++H<25);p.state=p.__s,p.getChildContext!=g&&(r=S(S({},r),p.getChildContext())),x&&!y&&p.getSnapshotBeforeUpdate!=g&&(w=p.getSnapshotBeforeUpdate(v,d)),L=h!=g&&h.type===I&&h.key==g?K(h.props.children):h,c=O(n,M(L)?L:[L],t,e,r,f,o,u,c,s,a),p.base=t.__e,t.__u&=-161,p.__h.length&&u.push(p),_&&(p.__E=p.__=g)}catch(n){if(u.length=l,t.__v=g,s||o!=g){if(n.then){for(t.__u|=s?160:128;c&&8==c.nodeType&&c.nextSibling;)c=c.nextSibling;o!=g&&(o[o.indexOf(c)]=g),t.__e=c}else if(o!=g)for(F=o.length;F--;)T(o[F])}else t.__e=e.__e;t.__k==g&&(t.__k=e.__k||[]),n.then||G(t),i.__e(n,t,e)}}else o==g&&t.__v==e.__v?(t.__k=e.__k,t.__e=e.__e):c=t.__e=Q(e.__e,t,e,r,f,o,u,s,a);return(h=i.diffed)&&h(t),128&t.__u?void 0:c}function G(n){n&&(n.__c&&(n.__c.__e=!0),n.__k&&n.__k.some(G))}function J(n,t,e){for(var r=0;r<e.length;r++)R(e[r],e[++r],e[++r]);i.__c&&i.__c(t,n),n.some(function(t){try{n=t.__h,t.__h=[],n.some(function(n){n.call(t)})}catch(n){i.__e(n,t.__v)}})}function K(n){return"object"!=typeof n||n==g||n.__b>0?n:M(n)?n.map(K):n.constructor!==m?null:S({},n)}function Q(n,e,r,f,o,u,c,s,a){var h,l,p,y,v,d,k,x=r.props||b,S=e.props,$=e.type;if("svg"==$?o=w:"math"==$?o="http://www.w3.org/1998/Math/MathML":o||(o=_),u!=g)for(h=0;h<u.length;h++)if((v=u[h])&&"setAttribute"in v==!!$&&($?v.localName==$:3==v.nodeType)){n=v,u[h]=g;break}if(n==g){if($==g)return document.createTextNode(S);n=document.createElementNS(o,$,S.is&&S),s&&(i.__m&&i.__m(e,u),s=!1),u=g}if($==g)x===S||s&&n.data==S||(n.data=S);else{if(u="textarea"==$&&S.defaultValue!=g?g:u&&t.call(n.childNodes),!s&&u!=g)for(x={},h=0;h<n.attributes.length;h++)x[(v=n.attributes[h]).name]=v.value;for(h in x)v=x[h],"dangerouslySetInnerHTML"==h?p=v:"children"==h||h in S||"value"==h&&"defaultValue"in S||"checked"==h&&"defaultChecked"in S||B(n,h,g,v,o);for(h in S)v=S[h],"children"==h?y=v:"dangerouslySetInnerHTML"==h?l=v:"value"==h?d=v:"checked"==h?k=v:s&&"function"!=typeof v||x[h]===v||B(n,h,v,x[h],o);if(l)s||p&&(l.__html==p.__html||l.__html==n.innerHTML)||(n.innerHTML=l.__html),e.__k=[];else if(p&&(n.innerHTML=""),O("template"==e.type?n.content:n,M(y)?y:[y],e,r,f,"foreignObject"==$?_:o,u,c,u?u[0]:r.__k&&j(r,0),s,a),u!=g)for(h=u.length;h--;)T(u[h]);s&&"textarea"!=$||(h="value","progress"==$&&d==g?n.removeAttribute("value"):d!=m&&(d!==n[h]||"progress"==$&&!d||"option"==$&&d!=x[h])&&B(n,h,d,x[h],o),h="checked",k!=m&&k!=n[h]&&B(n,h,k,x[h],o))}return n}function R(n,t,e){try{if("function"==typeof n){var r="function"==typeof n.__u;r&&n.__u(),r&&t==g||(n.__u=n(t))}else n.current=t}catch(n){i.__e(n,e)}}function U(n,t,e){var r,f;if(i.unmount&&i.unmount(n),(r=n.ref)&&(r.current&&r.current!=n.__e||R(r,g,t)),(r=n.__c)!=g){if(r.componentWillUnmount)try{r.componentWillUnmount()}catch(n){i.__e(n,t)}r.base=r.__P=r.__n=g}if(r=n.__k)for(f=0;f<r.length;f++)r[f]&&U(r[f],t,e||"function"!=typeof n.type);e||T(n.__e),n.__c=n.__=n.__e=m}function W(n,t,i){return this.constructor(n,i)}function X(n,e,r){var f,o,u,c;e==document&&(e=document.documentElement),i.__&&i.__(n,e),o=(f="function"==typeof r)?g:r&&r.__k||e.__k,u=[],c=[],E(e,n=(!f&&r||e).__k=$(I,g,[n]),o||b,b,e.namespaceURI,!f&&r?[r]:o?g:e.firstChild?t.call(e.childNodes):g,u,!f&&r?r:o?o.__e:e.firstChild,f,c),J(u,n,c),n.props.children=g}t=k.slice,i={__e:function(n,t,i,e){for(var r,f,o;t=t.__;)if((r=t.__c)&&!r.__)try{if((f=r.constructor)&&f.getDerivedStateFromError!=g&&(r.setState(f.getDerivedStateFromError(n)),o=r.__d),r.componentDidCatch!=g&&(r.componentDidCatch(n,e||{}),o=r.__d),o)return r.__E=r}catch(t){n=t}throw n}},e=0,r=function(n){return n!=g&&n.constructor===m},P.prototype.setState=function(n,t){var i;i=this.__s!=g&&this.__s!=this.state?this.__s:this.__s=S({},this.state),"function"==typeof n&&(n=n(S({},i),this.props)),n&&S(i,n),n!=g&&this.__v&&(t&&this._sb.push(t),L(this))},P.prototype.forceUpdate=function(n){this.__v&&(this.__e=!0,n&&this.__h.push(n),L(this))},P.prototype.render=I,f=[],u="function"==typeof Promise?Promise.prototype.then.bind(Promise.resolve()):setTimeout,c=function(n,t){return n.__v.__b-t.__v.__b},F.__r=0,s=Math.random().toString(8),a="__d"+s,h="__a"+s,l=/(PointerCapture)$|Capture$/i,p=0,y=D(!1),v=D(!0),d=0,n.Component=P,n.Fragment=I,n.cloneElement=function(n,i,e){var r,f,o,u,c=S({},n.props);for(o in n.type&&n.type.defaultProps&&(u=n.type.defaultProps),i)"key"==o?r=i[o]:"ref"==o?f=i[o]:c[o]=i[o]===m&&u!=m?u[o]:i[o];return arguments.length>2&&(c.children=arguments.length>3?t.call(arguments,2):e),C(n.type,c,r||n.key,f||n.ref,g)},n.createContext=function(n){function t(n){var i,e;return this.getChildContext||(i=new Set,(e={})[t.__c]=this,this.getChildContext=function(){return e},this.componentWillUnmount=function(){i=g},this.shouldComponentUpdate=function(n){this.props.value!=n.value&&i.forEach(function(n){n.__e=!0,L(n)})},this.sub=function(n){i.add(n);var t=n.componentWillUnmount;n.componentWillUnmount=function(){i&&i.delete(n),t&&t.call(n)}}),n.children}return t.__c="__cC"+d++,t.__=n,t.Provider=t.__l=(t.Consumer=function(n,t){return n.children(t)}).contextType=t,t},n.createElement=$,n.createRef=function(){return{current:g}},n.h=$,n.hydrate=function n(t,i){X(t,i,n)},n.isValidElement=r,n.options=i,n.render=X,n.toChildArray=function n(t,i){return i=i||[],t==g||"boolean"==typeof t||(M(t)?t.some(function(t){n(t,i)}):i.push(t)),i}});
@@ -722,7 +741,6 @@ button:disabled{opacity:.35;cursor:default}
 
 </script>
 <script>
-
 // ---------- Kleine Laufzeit für das Vorlagenformat (Platzhalter, sc-if, sc-for, Ereignisse) ----------
 (function () {
   var h = preact.h;
@@ -761,30 +779,41 @@ button:disabled{opacity:.35;cursor:default}
         return out;
       };
     }
-    var attrs = [];
+    var attrs = [], optList = null;
     Array.prototype.forEach.call(node.attributes, function (a) {
       if (a.name.indexOf('hint-') === 0) return;
       var m = WHOLE.exec(a.value), name = a.name;
+      if (name === 'data-options') { optList = m ? m[1] : null; return; }
       if (name === 'ondoubleclick') name = 'ondblclick';
       if (m) attrs.push({ n: name, raw: m[1] }); else attrs.push({ n: name, f: strFn(a.value) });
     });
-    var content = node.content || node;
-    var kids = compileChildren((tag === 'template' ? content : node).childNodes);
+    var kids = compileChildren(node.childNodes);
     return function (s) {
       var props = {};
       attrs.forEach(function (a) { props[a.n] = a.raw !== undefined ? lookup(s, a.raw) : a.f(s); });
       if (props.style != null && typeof props.style !== 'string') props.style = String(props.style);
-      return h.apply(null, [tag, props].concat(kids(s)));
+      var ch = kids(s);
+      // <select data-options="{{liste}}">: Optionen aus Daten (Parameter aus Excel)
+      if (optList) (lookup(s, optList) || []).forEach(function (o) { ch.push(h('option', { value: String(o.v), disabled: !!o.dis }, o.l)); });
+      return h.apply(null, [tag, props].concat(ch));
     };
   }
   window.DCLogic = function DCLogic(props) { this.props = props || {}; this.state = {}; };
-  var pending = false, root, app, render;
+  var pending = false, app, render;
   DCLogic.prototype.setState = function (patch, cb) {
     var u = typeof patch === 'function' ? patch(this.state) : patch;
     this.state = Object.assign({}, this.state, u);
     if (!pending) { pending = true; requestAnimationFrame(function () { pending = false; render(); if (cb) cb(); }); }
   };
   DCLogic.prototype.forceUpdate = function () { this.setState({}); };
+  // Oberfläche an das Fenster anpassen (Tablets): unter 1180 × 720 wird verkleinert statt abgeschnitten
+  function fit() {
+    var W = window.innerWidth, H = window.innerHeight, s = Math.min(1, W / 1180, H / 720);
+    var root = document.documentElement.style;
+    root.setProperty('--app-s', s); root.setProperty('--app-w', (W / s) + 'px'); root.setProperty('--app-h', (H / s) + 'px');
+  }
+  window.addEventListener('resize', fit); window.addEventListener('orientationchange', function () { setTimeout(fit, 250); });
+  fit();
   window.__mountDC = function (Cls, tplEl, el) {
     var fn = compileChildren(tplEl.content.childNodes);
     app = new Cls({});
@@ -800,10 +829,19 @@ button:disabled{opacity:.35;cursor:default}
 
 </script>
 <script>
-
+// ===== Parameter & Regeln: Standardwerte. Werden beim Start aus parameter.xlsx überschrieben. =====
+var PRM = {
+  RASTER: 50, GAP_MIN_FIRST: 1000, GAP_MIN: 500, GAP_MAX: 20000, FRAME_TOP_GAP: 50, FRAME_STEP: 500, FRAME_MIN: 2000, FRAME_MAX: 8000,
+  CLEAR_DURCHGANG: 2100, CLEAR_DURCHFAHRT: 3500, DURCHFAHRT_DECK: 'Gitterrost', LOWBEAM_Z: 250, LOWBEAM_PROF: 110,
+  PAL_CLEARANCE: 100, BAY_MARGIN: 50, BAY_PITCH: 850, MID_MIN: 100, MID_MAX: 1000, MID_DEFAULT: 200, MID_STEP: 50,
+  AISLE_MIN: 1000, AISLE_MAX: 6000, AISLE_STEP: 100, AISLE_DEFAULT: 3000,
+  UW_DEFAULT: 90, PROF_DEFAULT: 120, LOAD_DEFAULT: 1000, DEPTH_DEFAULT: 1100, START_WIDTH: 2700, START_FIELDS: 3, START_GAPS: [1500, 1300, 1300],
+  PAL_H_DEFAULT: 1000, PAL_W_DEFAULT: 800
+};
+var PARAM_INFO = { src: 'Standardwerte (eingebaut)', ok: true, msgs: [] };
 var COLORS = ['#1F4E9C', '#C2410C', '#0F766E', '#6D28D9', '#A16207', '#BE185D', '#0E7490', '#4D7C0F', '#9F1239', '#334155'];
 var WIDTHS = [1350, 1800, 2200, 2700, 3300, 3600];
-var GAP_MAX = 20000; // Fachabstand nach oben praktisch unbegrenzt
+var GAP_MAX = PRM.GAP_MAX; // Fachabstand nach oben praktisch unbegrenzt
 var HEIGHTS = [2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500, 8000];
 var DECKS = ['Ohne', 'Gitterrost', 'Drahtgitter', 'Spanplatte'];
 var GUARDS = ['Ohne', 'U-Anfahrschutz', 'Flexibel'];
@@ -815,37 +853,37 @@ var PTYPES = {}; // wird bei jedem Rendern aus state.palTypes gefüllt
 function palOf(l) { return l && l.pt ? PTYPES[l.pt] || null : null; }
 function fpalOf(f) { return f && f.fpt && floorSlots(f) ? PTYPES[f.fpt] || null : null; }
 // Europalette 800 × 1200: passt, wenn über der Ladung mind. 100 mm Luft bis Unterkante der nächsten Traverse bleiben
-function palFitsL(f, l) { var t = palOf(f.levels[l]), n = f.levels[l + 1]; if (!t || !n) return true; return n.gap - lprof(n) - t.h >= 100; }
-function palBase(f) { return fart(f) === 'Bodennahe Traverse' ? 250 : 0; }
-function palFitsF(f) { var t = fpalOf(f), n = f.levels[0]; if (!t || !n) return true; return n.gap - lprof(n) - palBase(f) - t.h >= 100; }
+function palFitsL(f, l) { var t = palOf(f.levels[l]), n = f.levels[l + 1]; if (!t || !n) return true; return n.gap - lprof(n) - t.h >= PRM.PAL_CLEARANCE; }
+function palBase(f) { return fart(f) === 'Bodennahe Traverse' ? PRM.LOWBEAM_Z : 0; }
+function palFitsF(f) { var t = fpalOf(f), n = f.levels[0]; if (!t || !n) return true; return n.gap - lprof(n) - palBase(f) - t.h >= PRM.PAL_CLEARANCE; }
 function palHeavy(l) { var t = palOf(l); return !!(t && t.w > (l.load || 0)); }
 var DEPTHS = [800, 1100];
 var UWS = [80, 90, 100, 120];
-function fuw(fr) { return fr && fr.uw ? fr.uw : 90; }
+function fuw(fr) { return fr && fr.uw ? fr.uw : PRM.UW_DEFAULT; }
 var DECK_C = { Gitterrost: 'rgba(120,132,144,0.55)', Drahtgitter: 'rgba(150,160,170,0.4)', Stahlpaneel: 'rgba(110,120,130,0.8)', Spanplatte: 'rgba(211,185,140,0.9)' };
 var HI = '#E3702A', WARN = '#D64545', BEAM = '#1F4E9C', UW = 90;
 function fmt(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
 function sum(a) { return a.reduce(function (s, v) { return s + v; }, 0); }
-function perBay(w) { return Math.max(0, Math.floor((w - 50) / 850)); }
+function perBay(w) { return Math.max(0, Math.floor((w - PRM.BAY_MARGIN) / PRM.BAY_PITCH)); }
 function clone(o) { return JSON.parse(JSON.stringify(o)); }
 function fieldTop(f) { return sum(f.levels.map(function (l) { return l.gap; })); }
 var ARTS = ['Bodenlagerung', 'Bodennahe Traverse', 'Durchgang', 'Durchfahrt'];
-var ART_CLEAR = { 'Durchgang': 2100, 'Durchfahrt': 3500 }; // Mindest-Lichthöhe unter der untersten Traverse (Annahme)
+var ART_CLEAR = { 'Durchgang': PRM.CLEAR_DURCHGANG, 'Durchfahrt': PRM.CLEAR_DURCHFAHRT }; // Mindest-Lichthöhe unter der untersten Traverse (Annahme)
 function fart(f) { return f.art || 'Bodenlagerung'; }
 function floorSlots(f) { var a = fart(f); return a === 'Bodenlagerung' || a === 'Bodennahe Traverse' ? 1 : 0; }
 function artClearOk(f) { var need = ART_CLEAR[fart(f)]; if (!need) return true; if (!f.levels.length) return true; return f.levels[0].gap - lprof(f.levels[0]) >= need; }
 // Durchfahrt: beim Umstellen wird auf die unterste Traverse ein Gitterrost gelegt (danach frei änderbar)
-function enforceArt(f) { if (fart(f) === 'Durchfahrt' && f.levels[0]) f.levels[0].deck = 'Gitterrost'; return f; }
+function enforceArt(f) { if (fart(f) === 'Durchfahrt' && f.levels[0]) f.levels[0].deck = PRM.DURCHFAHRT_DECK; return f; }
 function enforceRow(r) { r.fields.forEach(enforceArt); return r; }
 function sig(f) { return JSON.stringify([fart(f), f.width, !!f.push, f.levels.map(function (l) { return [l.gap, l.deck, l.load, l.color || '5010', lprof(l), l.pt || 0]; }), floorSlots(f) && f.fpt ? f.fpt : 0]); }
 var RAL = [{ id: '5010', name: 'RAL 5010 Enzianblau', hex: '#0E518D' }, { id: '1003', name: 'RAL 1003 Signalgelb', hex: '#F9A800' },
   { id: '3000', name: 'RAL 3000 Feuerrot', hex: '#AF2B1E' }, { id: '6011', name: 'RAL 6011 Resedagrün', hex: '#587246' }, { id: '7035', name: 'RAL 7035 Lichtgrau', hex: '#C5C7C4' }];
 var PROFS = [95, 110, 120, 130, 150, 170];
-function lprof(l) { return l.prof || 120; }
+function lprof(l) { return l.prof || PRM.PROF_DEFAULT; }
 function ralHex(id) { for (var i = 0; i < RAL.length; i++) if (RAL[i].id === (id || '5010')) return RAL[i].hex; return '#0E518D'; }
 function frameNeed(row, k) {
   var a = row.fields[k - 1], b = row.fields[k];
-  return Math.max(a ? fieldTop(a) : 0, b ? fieldTop(b) : 0) + 50;
+  return Math.max(a ? fieldTop(a) : 0, b ? fieldTop(b) : 0) + PRM.FRAME_TOP_GAP;
 }
 function levelAt(f, h) { var acc = 0; for (var i = 0; i < f.levels.length; i++) { acc += f.levels[i].gap; if (acc === h) return i; } return -1; }
 function levelH(f, l) { return sum(f.levels.slice(0, l + 1).map(function (x) { return x.gap; })); }
@@ -853,8 +891,112 @@ function fieldOn(f, sx) { return !!f && !f.empty && !(sx === '-V' && f.gapV) && 
 function frameUsed(r, k, sx) { return fieldOn(r.fields[k - 1], sx) || fieldOn(r.fields[k], sx); }
 function frameSides(r, k) { return r.double ? (frameUsed(r, k, '-V') ? 1 : 0) + (frameUsed(r, k, '-H') ? 1 : 0) : (frameUsed(r, k, '') ? 1 : 0); }
 function fieldSides(r, f) { if (f.empty) return 0; if (!r.double) return 1; return 2 - (f.gapV ? 1 : 0) - (f.gapH ? 1 : 0); }
-function up500(v) { return Math.min(8000, Math.max(2000, Math.ceil(v / 500) * 500)); }
-function field(width, deck, gaps) { return { width: width, push: false, levels: gaps.map(function (g) { return { gap: g, deck: deck, load: 1000, prof: 120 }; }) }; }
+function up500(v) { return Math.min(PRM.FRAME_MAX, Math.max(PRM.FRAME_MIN, Math.ceil(v / PRM.FRAME_STEP) * PRM.FRAME_STEP)); }
+function field(width, deck, gaps) { return { width: width, push: false, levels: gaps.map(function (g) { return { gap: g, deck: deck, load: PRM.LOAD_DEFAULT, prof: PRM.PROF_DEFAULT }; }) }; }
+// ===== Excel (.xlsx) ohne Zusatzbibliothek lesen: ZIP entpacken (DecompressionStream) + XML auswerten =====
+function readXlsx(buf) {
+  var u8 = new Uint8Array(buf), dv = new DataView(buf);
+  var e = -1; for (var i = u8.length - 22; i >= Math.max(0, u8.length - 70000); i--) if (dv.getUint32(i, true) === 0x06054b50) { e = i; break; }
+  if (e < 0) return Promise.reject(new Error('Keine gültige .xlsx-Datei'));
+  var n = dv.getUint16(e + 10, true), off = dv.getUint32(e + 16, true), files = {}, jobs = [];
+  var dec = new TextDecoder('utf-8');
+  for (var k = 0; k < n; k++) {
+    var method = dv.getUint16(off + 10, true), csize = dv.getUint32(off + 20, true), nlen = dv.getUint16(off + 28, true), xlen = dv.getUint16(off + 30, true), clen = dv.getUint16(off + 32, true), loc = dv.getUint32(off + 42, true);
+    var name = dec.decode(u8.subarray(off + 46, off + 46 + nlen));
+    var start = loc + 30 + dv.getUint16(loc + 26, true) + dv.getUint16(loc + 28, true), data = u8.slice(start, start + csize);
+    (function (name, method, data) {
+      if (!/\.(xml|rels)$/.test(name)) return;
+      if (method === 0) files[name] = dec.decode(data);
+      else jobs.push(new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text().then(function (t) { files[name] = t; }));
+    })(name, method, data);
+    off += 46 + nlen + xlen + clen;
+  }
+  return Promise.all(jobs).then(function () {
+    var X = function (t) { return new DOMParser().parseFromString(t, 'application/xml'); };
+    var ss = [];
+    if (files['xl/sharedStrings.xml']) Array.prototype.forEach.call(X(files['xl/sharedStrings.xml']).getElementsByTagName('si'), function (si) {
+      ss.push(Array.prototype.map.call(si.getElementsByTagName('t'), function (t) { return t.textContent; }).join(''));
+    });
+    var rels = {};
+    Array.prototype.forEach.call(X(files['xl/_rels/workbook.xml.rels']).getElementsByTagName('Relationship'), function (r) { rels[r.getAttribute('Id')] = r.getAttribute('Target'); });
+    var book = {};
+    Array.prototype.forEach.call(X(files['xl/workbook.xml']).getElementsByTagName('sheet'), function (sh) {
+      var tgt = rels[sh.getAttribute('r:id')] || ''; tgt = tgt.replace(/^\/?xl\//, '').replace(/^\//, '');
+      var xml = files['xl/' + tgt]; if (!xml) return;
+      var rows = [];
+      Array.prototype.forEach.call(X(xml).getElementsByTagName('c'), function (c) {
+        var ref = c.getAttribute('r') || '', m = /^([A-Z]+)(\d+)$/.exec(ref); if (!m) return;
+        var col = 0; for (var q = 0; q < m[1].length; q++) col = col * 26 + (m[1].charCodeAt(q) - 64); col--;
+        var row = Number(m[2]) - 1, t = c.getAttribute('t'), v = c.getElementsByTagName('v')[0], val = null;
+        if (t === 's') val = v ? ss[Number(v.textContent)] : null;
+        else if (t === 'inlineStr') { var is = c.getElementsByTagName('t')[0]; val = is ? is.textContent : null; }
+        else if (t === 'str' || t === 'e') val = v ? v.textContent : null;
+        else if (t === 'b') val = v ? v.textContent === '1' : null;
+        else val = v ? Number(v.textContent) : null;
+        (rows[row] = rows[row] || [])[col] = val;
+      });
+      book[sh.getAttribute('name')] = rows;
+    });
+    return book;
+  });
+}
+function norm(s) { return String(s == null ? '' : s).toLowerCase().replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss').replace(/[^a-z0-9]/g, ''); }
+// Tabellenblätter "Auswahlwerte", "Farben", "Regeln" übernehmen; liefert Meldungen
+function applyParams(book) {
+  var msgs = [], used = [];
+  function sheet(name) { for (var k in book) if (norm(k) === norm(name)) { used.push(k); return book[k]; } msgs.push('Blatt „' + name + '“ fehlt – Standardwerte bleiben.'); return null; }
+  var aw = sheet('Auswahlwerte');
+  if (aw && aw[0]) {
+    var COLS = [['feldweite', 'WIDTHS', 'n'], ['rahmenhoehe', 'HEIGHTS', 'n'], ['rahmentiefe', 'DEPTHS', 'n'], ['stuetzenbreite', 'UWS', 'n'], ['traversenprofil', 'PROFS', 'n'],
+      ['ebenenausstattung', 'DECKS', 's'], ['stuetzenschutz', 'GUARDS', 's'], ['zulgewicht', 'LOADS', 'n'], ['palettenhoehe', 'PAL_H', 'n'], ['palettengewicht', 'PAL_W', 'n']];
+    aw[0].forEach(function (hd, ci) {
+      var key = norm(hd); if (!key) return;
+      var def = COLS.filter(function (c) { return key.indexOf(c[0]) === 0; })[0];
+      if (!def) { msgs.push('Spalte „' + hd + '“ ist unbekannt und wird ignoriert.'); return; }
+      var vals = [];
+      for (var r = 1; r < aw.length; r++) { var v = aw[r] && aw[r][ci]; if (v === null || v === undefined || v === '') continue; if (def[2] === 'n') { v = Number(v); if (!isFinite(v) || v <= 0) { msgs.push(hd + ': Wert in Zeile ' + (r + 1) + ' ist keine Zahl.'); continue; } } else v = String(v).trim(); if (vals.indexOf(v) < 0) vals.push(v); }
+      if (!vals.length) { msgs.push(hd + ': keine Werte – Standardwerte bleiben.'); return; }
+      if (def[2] === 'n') vals.sort(function (x, y) { return x - y; });
+      if ((def[1] === 'DECKS' || def[1] === 'GUARDS') && vals.indexOf('Ohne') < 0) vals.unshift('Ohne');
+      LISTS[def[1]] = vals;
+    });
+  }
+  var fb = sheet('Farben');
+  if (fb) {
+    var cols = [];
+    for (var r = 1; r < fb.length; r++) {
+      var row = fb[r] || [], id = row[0], nm = row[1], hx = String(row[2] || '').trim();
+      if (id === null || id === undefined || id === '') continue;
+      if (!/^#?[0-9a-fA-F]{6}$/.test(hx)) { msgs.push('Farben: Farbwert in Zeile ' + (r + 1) + ' ist kein Hex-Wert (z. B. #0E518D).'); continue; }
+      cols.push({ id: String(id).replace(/^RAL\s*/i, '').trim(), name: nm ? String(nm) : 'RAL ' + id, hex: hx.charAt(0) === '#' ? hx : '#' + hx });
+    }
+    if (cols.length) LISTS.RAL = cols;
+  }
+  var rg = sheet('Regeln');
+  if (rg) {
+    for (var r2 = 1; r2 < rg.length; r2++) {
+      var rw = rg[r2] || [], key2 = rw[0] == null ? '' : String(rw[0]).trim(), val = rw[1];
+      if (!key2 || val === null || val === undefined || val === '') continue;
+      if (!(key2 in PRM)) { msgs.push('Regel „' + key2 + '“ ist unbekannt.'); continue; }
+      if (Array.isArray(PRM[key2])) { var arr = String(val).split(/[;, ]+/).map(Number).filter(function (x) { return isFinite(x) && x > 0; }); if (arr.length) PRM[key2] = arr; else msgs.push(key2 + ': Liste erwartet, z. B. 1500;1300;1300.'); }
+      else if (typeof PRM[key2] === 'number') { var nv = Number(val); if (isFinite(nv)) PRM[key2] = nv; else msgs.push(key2 + ': Zahl erwartet.'); }
+      else PRM[key2] = String(val);
+    }
+  }
+  syncLists();
+  return msgs;
+}
+var LISTS = {};
+function syncLists() {
+  if (LISTS.WIDTHS) WIDTHS = LISTS.WIDTHS; if (LISTS.HEIGHTS) HEIGHTS = LISTS.HEIGHTS; if (LISTS.DEPTHS) DEPTHS = LISTS.DEPTHS; if (LISTS.UWS) UWS = LISTS.UWS;
+  if (LISTS.PROFS) PROFS = LISTS.PROFS; if (LISTS.DECKS) DECKS = LISTS.DECKS; if (LISTS.GUARDS) GUARDS = LISTS.GUARDS; if (LISTS.LOADS) LOADS = LISTS.LOADS;
+  if (LISTS.PAL_H) PAL_H = LISTS.PAL_H; if (LISTS.PAL_W) PAL_W = LISTS.PAL_W; if (LISTS.RAL) RAL = LISTS.RAL;
+  GAP_MAX = PRM.GAP_MAX; ART_CLEAR = { 'Durchgang': PRM.CLEAR_DURCHGANG, 'Durchfahrt': PRM.CLEAR_DURCHFAHRT };
+}
+function startRows() {
+  var fs = []; for (var i = 0; i < Math.max(1, PRM.START_FIELDS); i++) fs.push(field(PRM.START_WIDTH, 'Ohne', PRM.START_GAPS.slice()));
+  return [withFrames({ name: 'Reihe 1', count: 1, depth: PRM.DEPTH_DEFAULT, fields: fs })];
+}
 function withFrames(row) {
   row.frames = [];
   for (var k = 0; k <= row.fields.length; k++) row.frames.push({ height: up500(frameNeed(row, k)), guard: 'Ohne' });
@@ -865,12 +1007,8 @@ class Component extends DCLogic {
   constructor(props) {
     super(props);
     // Start: eine einfache Reihe aus drei gleichen Feldern (Typ A)
-    this.state = { aisle: 3000, rot: -32, tilt: 58, zoom: 1.6, sel: null, menu: null, drag: null, dropAt: null, selRow: 0, scopeAll: false, moveMode: false, gapDraft: null, view: '3d', pan: { x: 0, y: 0 }, multi: [], palTypes: [{ id: 'P1', h: 1000, w: 800, color: PAL_COLORS[0] }], udims: [], measure: false, measA: null, measH: null, lasso: false, lassoKind: 'field', lassoBox: null,
-      rows: [withFrames({ name: 'Reihe 1', count: 1, depth: 1100, fields: [
-        field(2700, 'Ohne', [1500, 1300, 1300]),
-        field(2700, 'Ohne', [1500, 1300, 1300]),
-        field(2700, 'Ohne', [1500, 1300, 1300])
-      ] })] };
+    this.state = { aisle: PRM.AISLE_DEFAULT, rot: -32, tilt: 58, zoom: 1.6, sel: null, menu: null, drag: null, dropAt: null, selRow: 0, scopeAll: false, moveMode: false, gapDraft: null, view: '3d', pan: { x: 0, y: 0 }, multi: [], palTypes: [{ id: 'P1', h: PRM.PAL_H_DEFAULT, w: PRM.PAL_W_DEFAULT, color: PAL_COLORS[0] }], udims: [], measure: false, measA: null, measH: null, lasso: false, lassoKind: 'field', lassoBox: null,
+      rows: startRows() };
   }
   // Rückgängig: bis zu 3 Konfigurationsänderungen merken (schnelle Folgen wie Ziehen zählen als ein Schritt)
   setState(patch, cb) {
@@ -883,6 +1021,25 @@ class Component extends DCLogic {
       }
     }
     super.setState(patch, cb);
+  }
+  componentDidMount() {
+    var self = this;
+    if (location.protocol === 'file:') { PARAM_INFO = { src: 'Standardwerte (eingebaut) – lokal geöffnet, parameter.xlsx wird nur auf dem Server automatisch geladen', ok: true, msgs: [] }; self.forceUpdate(); return; }
+    fetch('parameter.xlsx', { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error('nicht gefunden'); return r.arrayBuffer(); })
+      .then(function (b) { return self.loadParams(b, 'parameter.xlsx (auf dem Server)'); })
+      .catch(function () { PARAM_INFO = { src: 'Standardwerte (eingebaut) – keine parameter.xlsx neben der index.html gefunden', ok: true, msgs: [] }; self.forceUpdate(); });
+  }
+  loadParams(buf, label) {
+    var self = this;
+    return readXlsx(buf).then(function (book) {
+      var msgs = applyParams(book);
+      PARAM_INFO = { src: label, ok: true, msgs: msgs, at: new Date().toLocaleString('de-DE') };
+      // Noch nichts geändert? Dann Startkonfiguration mit den neuen Regeln neu aufbauen
+      var fresh = !self._hist || !self._hist.length;
+      self._undoing = true;
+      self.setState(fresh ? { rows: startRows(), aisle: PRM.AISLE_DEFAULT, palTypes: [{ id: 'P1', h: PRM.PAL_H_DEFAULT, w: PRM.PAL_W_DEFAULT, color: PAL_COLORS[0] }], sel: null, multi: [] } : {});
+      self._undoing = false;
+    }).catch(function (e) { PARAM_INFO = { src: label + ' – konnte nicht gelesen werden (' + e.message + ')', ok: false, msgs: [] }; self.forceUpdate(); });
   }
   undo() {
     var h = this._hist; if (!h || !h.length) return;
@@ -925,7 +1082,7 @@ class Component extends DCLogic {
       return [px, py];
     }
     var snap = this._snap || { xs: [], ys: [], zs: [0] }, tol = 14 / Math.max(1e-6, P.s3);
-    function sn(v, list) { var best = null, bd = tol; list.forEach(function (c) { var d = Math.abs(c - v); if (d < bd) { bd = d; best = c; } }); return best !== null ? best : Math.round(v / 50) * 50; }
+    function sn(v, list) { var best = null, bd = tol; list.forEach(function (c) { var d = Math.abs(c - v); if (d < bd) { bd = d; best = c; } }); return best !== null ? best : Math.round(v / PRM.RASTER) * PRM.RASTER; }
     if (P.view === 'front') {
       var x = P.F.x + (mx - W / 2 - P.tx) / P.s3, z = P.F.z - (my - H * 0.6 - P.ty) / P.s3;
       return { plane: 'front', x: sn(x, snap.xs), z: Math.max(0, sn(z, snap.zs)) };
@@ -1016,7 +1173,7 @@ class Component extends DCLogic {
 
     function rowLen(r) { return r.fields.length ? sum(r.fields.map(function (f) { return f.width; })) + sum(r.frames.map(fuw)) : 0; }
     function rowPlaces(r) { return sum(r.fields.map(function (f) { return fieldSides(r, f) * perBay(f.width) * (f.levels.length + floorSlots(f)); })); }
-    function rowDepth(r) { return r.double ? 2 * r.depth + (r.mid || 200) : r.depth; }
+    function rowDepth(r) { return r.double ? 2 * r.depth + (r.mid || PRM.MID_DEFAULT) : r.depth; }
     function frameLow(r, k) { return r.frames[k] && r.frames[k].height < frameNeed(r, k); }
     function commonProf(levels) { if (!levels.length) return null; var p0 = lprof(levels[0]); return levels.every(function (l) { return lprof(l) === p0; }) ? p0 : null; }
     function profNote(levels) { return !levels.length ? ' (keine Ebenen vorhanden)' : (commonProf(levels) ? '' : ' (derzeit gemischt)'); }
@@ -1025,7 +1182,7 @@ class Component extends DCLogic {
       return { val: has ? String(cur) : '', notMixed: has, change: function (e) { var v = e.target.value; if (v !== '') fn(num ? Number(v) : v); } };
     }
     function profOpts(cur, fn) { return dropSel(cur, fn, true); }
-    function snap50(v, lo, hi) { v = Math.round(Number(v) / 50) * 50; return Math.max(lo, Math.min(hi, v)); }
+    function snap50(v, lo, hi) { v = Math.round(Number(v) / PRM.RASTER) * PRM.RASTER; return Math.max(lo, Math.min(hi, v)); }
     function gapInput(cur, lo, hi, apply) {
       var draft = st.gapDraft;
       return {
@@ -1033,7 +1190,7 @@ class Component extends DCLogic {
         gapType: function (e) {
           var v = e.target.value;
           // Pfeiltasten/Spinner liefern ganze 50er-Schritte: sofort übernehmen; getippte Werte erst bei Enter/Verlassen
-          if (v !== '' && Number(v) % 50 === 0 && Math.abs(Number(v) - (cur || 0)) === 50) { self.setState({ gapDraft: null }); apply(snap50(v, lo, hi)); }
+          if (v !== '' && Number(v) % PRM.RASTER === 0 && Math.abs(Number(v) - (cur || 0)) === PRM.RASTER) { self.setState({ gapDraft: null }); apply(snap50(v, lo, hi)); }
           else self.setState({ gapDraft: v });
         },
         gapCommit: function () { var d = self.state.gapDraft; if (d === null || d === undefined || d === '') { self.setState({ gapDraft: null }); return; } self.setState({ gapDraft: null }); apply(snap50(d, lo, hi)); },
@@ -1250,7 +1407,7 @@ class Component extends DCLogic {
     function floorDim(x, yEdge, w, row, text, out) {
       var gap = 80 * s3, len = (row ? 1500 : 800) * s3, ly = (row ? 1150 : 450) * s3, fs = Math.max(12, Math.min(22, 280 * s3));
       var y = out ? yEdge + gap : yEdge - gap - len;
-      return { w: w, h: len, ly: out ? ly : len - ly, ty: out ? ly + 5 : len - ly - fs - 5, fs: fs, text: text, rot: 'none', tf: Tr(x, y, 0.8) };
+      return { w: w, h: len, ly: out ? ly : len - ly, ty: out ? ly + 5 : len - ly - fs - 5, fs: fs, text: text, rot: 'none', tf: Tr(x, y, 2) };
     }
     // Vorderansicht: Maßketten in der senkrechten Ebene vor der Anlage
     function frontH(x, len, lyMM, text) {
@@ -1265,7 +1422,7 @@ class Component extends DCLogic {
       // Maßlinie in Tiefenrichtung links vor dem ersten Rahmen; Text liest von unten nach oben
       var gap = 600 * s3, fs = Math.max(12, Math.min(22, 280 * s3)), lyOut = row ? 700 * s3 + (fs + 8) * 2.4 + 18 : 700 * s3, ext = lyOut + (fs + 8) * (stag ? 2.2 : 1.2) + 4;
       var ly = ext - lyOut, ty = ly - fs - 8 - (stag ? fs + 8 : 0);
-      return { w: len, h: ext, ly: ly, ty: ty, fs: fs, text: text, rot: 'rotate(180deg)', tf: Tr(xEdge - gap - ext, y + len, 0.8, ' rotateZ(-90deg)') };
+      return { w: len, h: ext, ly: ly, ty: ty, fs: fs, text: text, rot: 'rotate(180deg)', tf: Tr(xEdge - gap - ext, y + len, 2, ' rotateZ(-90deg)') };
     }
     function frameParts(xx, y0, dpx, uwk, Hp, Hmm, Dmm, on, low, tt, tgt) {
       var ud = Math.max(2, 70 * s3), cF = on ? HI : (low ? WARN : '#C9CFD4'), cS = on ? '#C95D1E' : (low ? '#B83A3A' : '#A9B1B8'), cB = on ? HI : (low ? WARN : '#9AA3AB');
@@ -1316,7 +1473,7 @@ class Component extends DCLogic {
       if (firstInst) CTR.r[ri] = { x: (r.pos ? r.pos.x : 0) + rowLen(r) / 2, y: yCur + (r.pos ? r.pos.y : 0) + rowDepth(r) / 2, h: Math.max.apply(null, r.frames.map(function (q) { return q.height; })), L: rowLen(r), D: rowDepth(r), a: rAng };
       for (var side = 0; side < sides; side++) {
       var pxo = (r.pos ? r.pos.x : 0) * s3, pyo = (r.pos ? r.pos.y : 0) * s3;
-      var y0 = (yCur + side * (r.depth + (r.mid || 200))) * s3 + pyo, xx = pxo;
+      var y0 = (yCur + side * (r.depth + (r.mid || PRM.MID_DEFAULT))) * s3 + pyo, xx = pxo;
       if (side === 0) phys++;
       var RC = 'R' + pad3(phys), SX = r.double ? (side === sides - 1 ? '-V' : '-H') : '';
       (rowPhys[ri] = rowPhys[ri] || []).push({ rc: RC, sx: SX });
@@ -1330,7 +1487,7 @@ class Component extends DCLogic {
         if (fUsed) frameParts(xx, y0, dpx, uwk, Hp, fr.height, r.depth, on, low, tt, tgt);
         if (fUsed && !MUTE) { [xx, xx + uwk].forEach(function (sx) { [y0, y0 + dpx].forEach(function (sy) { var q = rotMM(sx / s3, sy / s3); SN.xs.push(q.x); SN.ys.push(q.y); }); }); SN.zs.push(fr.height); }
         if (r.double && side === 0 && frameUsed(r, k, '-H') && frameUsed(r, k, '-V')) {
-          var midPx = (r.mid || 200) * s3, yS = y0 + dpx, thS = Math.max(2, 60 * s3), cSp = on ? HI : '#5F6B76';
+          var midPx = (r.mid || PRM.MID_DEFAULT) * s3, yS = y0 + dpx, thS = Math.max(2, 60 * s3), cSp = on ? HI : '#5F6B76';
           [Math.min(600, fr.height * 0.25), Math.max(fr.height - 600, fr.height * 0.6)].forEach(function (zmmS) {
             var zS = zmmS * s3;
             strut(xx + uwk / 2, yS, zS, yS + midPx, zS, thS, cSp, tt + ' · Distanzstück', tgt, false);
@@ -1345,14 +1502,14 @@ class Component extends DCLogic {
         var sideGap = f.empty || (r.double && ((SX === '-V' && f.gapV) || (SX === '-H' && f.gapH)));
         var ftgt = { kind: 'field', ri: ri, k: k }, ft = RC + '-F' + pad3(k + 1) + SX + (sideGap ? ' · Lücke' : ' · Typ ' + t.id);
         var lfs = Math.max(10, Math.min(bwp, dpx) * 0.55);
-        labels.push({ id: sideGap ? 'Lücke' : t.id, coord: RC + '-F' + pad3(k + 1) + SX + (!sideGap && fart(f) !== 'Bodenlagerung' ? ' · ' + fart(f) : ''), cfs: Math.max(7, Math.min(16, bwp * 0.075)), color: hiField(ri, k) ? HI : t.color, w: bwp, h: dpx, fs: lfs, tf: Tr(xx + uwk, y0, isTop ? (maxH + 3000) * s3 + 4 : 1.5) });
+        labels.push({ id: sideGap ? 'Lücke' : t.id, coord: RC + '-F' + pad3(k + 1) + SX + (!sideGap && fart(f) !== 'Bodenlagerung' ? ' · ' + fart(f) : ''), cfs: Math.max(7, Math.min(16, bwp * 0.075)), color: hiField(ri, k) ? HI : t.color, w: bwp, h: dpx, fs: lfs, tf: Tr(xx + uwk, y0, isTop ? (maxH + 3000) * s3 + 4 : 3) });
         var fOn = hiField(ri, k);
         var gapBg = 'repeating-linear-gradient(45deg, rgba(22,32,42,0.10) 0px, rgba(22,32,42,0.10) 4px, rgba(22,32,42,0) 4px, rgba(22,32,42,0) 10px)';
         var fa = fart(f), artBg = fa === 'Durchgang' ? 'repeating-linear-gradient(90deg, rgba(31,122,72,0.22) 0px, rgba(31,122,72,0.22) 8px, rgba(31,122,72,0.06) 8px, rgba(31,122,72,0.06) 16px)'
           : fa === 'Durchfahrt' ? 'repeating-linear-gradient(45deg, rgba(242,194,0,0.55) 0px, rgba(242,194,0,0.55) 8px, rgba(22,32,42,0.35) 8px, rgba(22,32,42,0.35) 16px)' : 'rgba(31,78,156,0.10)';
         add(bwp, dpx, fOn ? 'rgba(227,112,42,0.35)' : (hiRow(ri) ? 'rgba(227,112,42,0.18)' : (sideGap ? gapBg : artBg)), Tr(xx + uwk, y0, 0), ft, ftgt, false, fOn || hiRow(ri));
         if (!sideGap && fa === 'Bodennahe Traverse') {
-          var bhN = Math.max(2, 110 * s3), zN = 250 * s3, cN = ralHex(f.levels[0] ? f.levels[0].color : '5010');
+          var bhN = Math.max(2, PRM.LOWBEAM_PROF * s3), zN = PRM.LOWBEAM_Z * s3, cN = ralHex(f.levels[0] ? f.levels[0].color : '5010');
           add(bwp, bhN, cN, Tr(xx + uwk, y0, zN, XZ), ft + ' · bodennahe Traverse', ftgt, false, false);
           add(bwp, bhN, cN, Tr(xx + uwk, y0 + dpx, zN, XZ), ft + ' · bodennahe Traverse', ftgt, false, false);
         }
@@ -1422,7 +1579,7 @@ class Component extends DCLogic {
       }
       if (hiRow(ri) || isTop) {
         var yR = yCur * s3 + pyo, segs = [[r.depth, fmt(r.depth) + ' mm']];
-        if (r.double) segs.push([r.mid || 200, fmt(r.mid || 200) + ' mm'], [r.depth, fmt(r.depth) + ' mm']);
+        if (r.double) segs.push([r.mid || 200, fmt(r.mid || PRM.MID_DEFAULT) + ' mm'], [r.depth, fmt(r.depth) + ' mm']);
         if (ii < inst.length - 1) segs.push([st.aisle, 'Gasse ' + fmt(st.aisle) + ' mm']);
         var yP = yR;
         segs.forEach(function (sg, si) { dims.push(floorDimY(pxo, yP, sg[0] * s3, 0, sg[1], sg[0] < 800 || si % 2 === 1)); yP += sg[0] * s3; });
@@ -1437,7 +1594,7 @@ class Component extends DCLogic {
       self._bb = { x0: cI.x - lxI / 2, x1: cI.x + lxI / 2, y0: cI.y - dyI / 2, y1: cI.y + dyI / 2, h: cI.h };
     }
     var GR = Math.min(60000 * s3, 7000), gMaj = 1000 * s3, gMin = 250 * s3;
-    var grid = { w: 2 * GR + maxLen * s3, h: 2 * GR + depthTot * s3, tf: Tr(-GR, -GR, -1), major: gMaj, minor: gMin, off: (GR % gMaj) };
+    var grid = { w: 2 * GR + maxLen * s3, h: 2 * GR + depthTot * s3, tf: Tr(-GR, -GR, -3), major: gMaj, minor: gMin, off: (GR % gMaj) };
     // ---- Stückliste (live aus der Konfiguration) ----
     var bomMap = {}, order2 = [];
     function addB(group, key, text, qty) { var k = group + '|' + key; if (!bomMap[k]) { bomMap[k] = { group: group, text: text, qty: 0 }; order2.push(k); } bomMap[k].qty += qty; }
@@ -1453,7 +1610,7 @@ class Component extends DCLogic {
         if (fr.guard !== 'Ohne') addB('Stützenschutz', fr.guard, fr.guard, mF);
         if (r.double && frameUsed(r, k, '-V') && frameUsed(r, k, '-H')) nSpacerFrames++;
       });
-      if (r.double && nSpacerFrames) addB('Distanzstücke', String(r.mid || 200), 'Distanzstück ' + fmt(r.mid || 200) + ' mm', nSpacerFrames * 2 * r.count);
+      if (r.double && nSpacerFrames) addB('Distanzstücke', String(r.mid || PRM.MID_DEFAULT), 'Distanzstück ' + fmt(r.mid || PRM.MID_DEFAULT) + ' mm', nSpacerFrames * 2 * r.count);
       r.fields.forEach(function (f) {
         var m = r.count * fieldSides(r, f);
         if (m && fart(f) === 'Bodennahe Traverse') { addB('Traversen', 'bn|' + f.width, 'Bodennahe Traverse ' + fmt(f.width) + ' mm', 2 * m); nBeams += 2 * m; }
@@ -1546,13 +1703,13 @@ class Component extends DCLogic {
         ins.isoBg = rowIso ? '#16202A' : '#FFFFFF'; ins.isoFg = rowIso ? '#FFFFFF' : '#16202A';
         ins.toggleIso = function () { self.setState({ isolate: ISO === ri && !ISOF ? null : ri, isoField: null }); };
         ins.angR = function () { self.upd(ri, function (x) { x.ang = ((x.ang || 0) + 90) % 360; }); };
-        ins.isDouble = !!R.double; ins.mid = fmt(R.mid || 200); ins.totalDepth = fmt(rowDepth(R));
+        ins.isDouble = !!R.double; ins.mid = fmt(R.mid || PRM.MID_DEFAULT); ins.totalDepth = fmt(rowDepth(R));
         ins.sBg = R.double ? '#FFFFFF' : '#16202A'; ins.sFg = R.double ? '#16202A' : '#FFFFFF';
         ins.dBg = R.double ? '#16202A' : '#FFFFFF'; ins.dFg = R.double ? '#FFFFFF' : '#16202A';
         ins.setSingle = function () { self.upd(ri, function (x) { x.double = false; }); };
-        ins.setDouble = function () { self.upd(ri, function (x) { x.double = true; if (!x.mid) x.mid = 200; }); };
-        ins.midDec = function () { self.upd(ri, function (x) { x.mid = Math.max(100, (x.mid || 200) - 50); }); };
-        ins.midInc = function () { self.upd(ri, function (x) { x.mid = Math.min(1000, (x.mid || 200) + 50); }); };
+        ins.setDouble = function () { self.upd(ri, function (x) { x.double = true; if (!x.mid) x.mid = PRM.MID_DEFAULT; }); };
+        ins.midDec = function () { self.upd(ri, function (x) { x.mid = Math.max(PRM.MID_MIN, (x.mid || PRM.MID_DEFAULT) - PRM.MID_STEP); }); };
+        ins.midInc = function () { self.upd(ri, function (x) { x.mid = Math.min(PRM.MID_MAX, (x.mid || PRM.MID_DEFAULT) + PRM.MID_STEP); }); };
         ins.count = R.count; ins.cDecOff = R.count <= 1;
         ins.cDec = function () { self.upd(ri, function (x) { x.count = Math.max(1, x.count - 1); }); };
         ins.cInc = function () { self.upd(ri, function (x) { x.count = Math.min(99, x.count + 1); }); };
@@ -1593,15 +1750,15 @@ class Component extends DCLogic {
         ins.isLevel = true; ins.single = false; ins.title = 'Ebene auf ' + fmt(hh) + ' mm';
         ins.scope = 'Markiert sind alle ' + hits.length + ' Ebenen dieser Reihe auf ' + fmt(hh) + ' mm Höhe' + (R.count > 1 ? ' (in allen ' + R.count + ' Exemplaren)' : '') + '. Änderungen gelten für alle.';
         ins.gap = same('gap') === null ? 'gemischt' : fmt(L0.gap) + ' mm'; ins.ok = fmt(hh);
-        var canDec = hits.every(function (x) { return x.f.levels[x.l].gap - 50 >= (x.l === 0 ? 1000 : 500); });
+        var canDec = hits.every(function (x) { return x.f.levels[x.l].gap - PRM.RASTER >= (x.l === 0 ? PRM.GAP_MIN_FIRST : PRM.GAP_MIN); });
         var canInc = true; // nach oben frei
-        ins.gapDec = function () { if (canDec) eachL(function (v) { v.gap -= 50; }, -50); };
-        var loR = hits.some(function (x) { return x.l === 0; }) ? 1000 : 500, hiR = GAP_MAX;
+        ins.gapDec = function () { if (canDec) eachL(function (v) { v.gap -= PRM.RASTER; }, -PRM.RASTER); };
+        var loR = hits.some(function (x) { return x.l === 0; }) ? PRM.GAP_MIN_FIRST : PRM.GAP_MIN, hiR = PRM.GAP_MAX;
         Object.assign(ins, gapInput(same('gap'), loR, hiR, function (v) {
           var d = v - L0.gap;
           eachL(function (x) { x.gap = v; }, same('gap') === null ? 0 : d);
         }));
-        ins.gapInc = function () { if (canInc) eachL(function (v) { v.gap += 50; }, 50); };
+        ins.gapInc = function () { if (canInc) eachL(function (v) { v.gap += PRM.RASTER; }, PRM.RASTER); };
         ins.deckOpts = dropSel(same('deck'), function (v) { eachL(function (x) { x.deck = v; }); });
         var hitLv = hits.map(function (x) { return x.f.levels[x.l]; });
         ins.colorNote = '· alle markierten Ebenen' + mixNote(hitLv);
@@ -1659,7 +1816,7 @@ class Component extends DCLogic {
           ins.artWarn = !artClearOk(FD);
           ins.artWarnText = need0 ? 'Lichte Höhe unter der untersten Traverse ist ' + fmt(FD.levels.length ? FD.levels[0].gap - lprof(FD.levels[0]) : 0) + ' mm, nötig sind ' + fmt(need0) + ' mm.' : '';
           ins.setArt = function (e) { var v = e.target.value; self.editField(ri, k2, function (f) { var was = fart(f); f.art = v; if (v === 'Durchfahrt' && was !== 'Durchfahrt') enforceArt(f); }); };
-          ins.artFix = function () { self.editField(ri, k2, function (f) { if (f.levels[0]) f.levels[0].gap = Math.ceil((need0 + lprof(f.levels[0])) / 50) * 50; }); };
+          ins.artFix = function () { self.editField(ri, k2, function (f) { if (f.levels[0]) f.levels[0].gap = Math.ceil((need0 + lprof(f.levels[0])) / PRM.RASTER) * PRM.RASTER; }); };
           ins.fieldDeckMixed = !fDecks.length ? ' (keine Ebenen vorhanden)' : (fCommon ? '' : ' (derzeit gemischt)');
           ins.fieldPal = palBlock(FD.levels, floorSlots(FD) ? [FD] : [], function (fl, ff) { self.editField(ri, k2, function (f) { f.levels.forEach(fl); if (floorSlots(f)) ff(f); }); });
           ins.fieldDeckOpts = dropSel(fCommon, function (v) { self.editField(ri, k2, function (f) { f.levels.forEach(function (l) { l.deck = v; }); }); });
@@ -1690,9 +1847,9 @@ class Component extends DCLogic {
           ins.isLevel = true; ins.title = 'Ebene ' + (l + 1) + ' in ' + (csL[0] || 'Feld ' + (k2 + 1));
           if (csL.length > 1) ins.scope = 'Gilt für ' + csL.length + ' Felder: ' + csL.join(', ') + '.';
           ins.gap = fmt(LV.gap) + ' mm'; ins.ok = fmt(ok);
-          ins.gapDec = function () { self.editField(ri, k2, function (f, L) { var v = f.levels[L]; if (v) v.gap = Math.max(L === 0 ? 1000 : 500, v.gap - 50); }); };
-          Object.assign(ins, gapInput(LV.gap, l === 0 ? 1000 : 500, GAP_MAX, function (v) { self.editField(ri, k2, function (f, L) { if (f.levels[L]) f.levels[L].gap = v; }); }));
-          ins.gapInc = function () { self.editField(ri, k2, function (f, L) { var v = f.levels[L]; if (v) v.gap = Math.min(GAP_MAX, v.gap + 50); }); };
+          ins.gapDec = function () { self.editField(ri, k2, function (f, L) { var v = f.levels[L]; if (v) v.gap = Math.max(L === 0 ? PRM.GAP_MIN_FIRST : PRM.GAP_MIN, v.gap - PRM.RASTER); }); };
+          Object.assign(ins, gapInput(LV.gap, l === 0 ? PRM.GAP_MIN_FIRST : PRM.GAP_MIN, PRM.GAP_MAX, function (v) { self.editField(ri, k2, function (f, L) { if (f.levels[L]) f.levels[L].gap = v; }); }));
+          ins.gapInc = function () { self.editField(ri, k2, function (f, L) { var v = f.levels[L]; if (v) v.gap = Math.min(PRM.GAP_MAX, v.gap + PRM.RASTER); }); };
           ins.deckOpts = dropSel(LV.deck, function (v) { self.editField(ri, k2, function (f, L) { if (f.levels[L]) f.levels[L].deck = v; }); });
           ins.colorNote = '· diese Ebene';
           ins.profNote = '· diese Ebene · Maß in mm';
@@ -1722,6 +1879,12 @@ class Component extends DCLogic {
     var lassoOn = !!st.lassoBox;
     var nU = (st.udims || []).length, nH = (self._hist || []).length;
     return {
+      optDeck: DECKS.map(function (d) { return { v: d, l: d }; }), optRal: RAL.map(function (c) { return { v: c.id, l: c.name }; }),
+      optProf: PROFS.map(function (v) { return { v: v, l: v + ' mm' }; }), optPalH: PAL_H.map(function (v) { return { v: v, l: fmt(v) + ' mm' }; }),
+      optPalW: PAL_W.map(function (v) { return { v: v, l: fmt(v) + ' kg' }; }), optArt: ARTS.map(function (v) { return { v: v, l: v }; }),
+      paramSrc: PARAM_INFO.src + (PARAM_INFO.at ? ' · geladen ' + PARAM_INFO.at : ''), paramErr: !PARAM_INFO.ok,
+      paramMsgs: (PARAM_INFO.msgs || []).map(function (m) { return { t: m }; }), paramHasMsgs: !!(PARAM_INFO.msgs && PARAM_INFO.msgs.length),
+      paramFile: function (e) { var f = e.target.files && e.target.files[0]; if (!f) return; f.arrayBuffer().then(function (b) { self.loadParams(b, f.name + ' (lokal geladen)'); }); e.target.value = ''; },
       undoFn: function () { self.undo(); }, undoOff: nH === 0, undoN: nH, undoOp: nH ? 1 : 0.45,
       isoOn: ISO !== null,
       isoName: ISOF ? 'Feld ' + ((rowPhys[ISOF.ri] || [])[0] ? rowPhys[ISOF.ri][0].rc + '-' : '') + 'F' + pad3(ISOF.k + 1) + ' (Typ ' + T0(st.rows[ISOF.ri].fields[ISOF.k]).id + ')'
@@ -1909,7 +2072,7 @@ class Component extends DCLogic {
           physN++;
           var sides = b.r.double ? 2 : 1;
           for (var sd = 0; sd < sides; sd++) {
-            var yy = b.y + sd * (b.r.depth + (b.r.mid || 200)), xx = b.x;
+            var yy = b.y + sd * (b.r.depth + (b.r.mid || PRM.MID_DEFAULT)), xx = b.x;
             b.r.fields.forEach(function (f, k) {
               var w = f.width, uw = fuw(b.r.frames[k]);
               xx += uw;
@@ -1975,7 +2138,7 @@ class Component extends DCLogic {
           }
           var sides = r.double ? 2 : 1;
           for (var sd = 0; sd < sides; sd++) {
-            var y0 = b.y + sd * (D + (r.mid || 200)), x = b.x, SX = r.double ? (sd === 1 ? '-V' : '-H') : '';
+            var y0 = b.y + sd * (D + (r.mid || PRM.MID_DEFAULT)), x = b.x, SX = r.double ? (sd === 1 ? '-V' : '-H') : '';
             for (var k = 0; k <= r.fields.length; k++) {
               var fr = r.frames[k], uw = fuw(fr), H = fr.height;
               if (frameUsed(r, k, SX)) {
@@ -1991,7 +2154,7 @@ class Component extends DCLogic {
               if (!gap) {
                 var fa = fart(f);
                 face(isoFl, [xf, y0, 0], [w, 0, 0], [0, D, 0], fa === 'Durchgang' ? '#CFE6D8' : fa === 'Durchfahrt' ? '#F4E3A1' : '#E4EAF1', [0, 0, 1]);
-                if (fa === 'Bodennahe Traverse') { var cN = ralHex(f.levels[0] ? f.levels[0].color : '5010'); box(xf, y0, 190, w, 50, 110, cN); box(xf, y0 + D - 50, 190, w, 50, 110, cN); }
+                if (fa === 'Bodennahe Traverse') { var cN = ralHex(f.levels[0] ? f.levels[0].color : '5010'); box(xf, y0, PRM.LOWBEAM_Z - PRM.LOWBEAM_PROF, w, 50, PRM.LOWBEAM_PROF, cN); box(xf, y0 + D - 50, PRM.LOWBEAM_Z - PRM.LOWBEAM_PROF, w, 50, PRM.LOWBEAM_PROF, cN); }
                 var z = 0, nPI = perBay(w), gPI = (w - nPI * 800) / (nPI + 1);
                 var palI = function (zb, T, bad) { for (var ip = 0; ip < nPI; ip++) { var xp = xf + gPI + ip * (800 + gPI), yp = y0 + (D - 1200) / 2; box(xp, yp, zb, 800, 1200, 144, '#8E6A3F'); box(xp, yp, zb + 144, 800, 1200, Math.max(10, T.h - 144), bad ? '#EFA3A3' : T.color); } };
                 if (fpalOf(f)) palI(palBase(f), fpalOf(f), !palFitsF(f));
@@ -2059,14 +2222,14 @@ class Component extends DCLogic {
         // --- Feldtypen: je Typ eine Ansicht mit Bemaßung ---
         order.forEach(function (sg) {
           var t = types[sg], f = t.f, o = Sheet('Feldtyp ' + t.id + (fart(f) !== 'Bodenlagerung' ? ' – ' + fart(f) : '') + ' – Ansicht');
-          var uw = 90, fh = up500(fieldTop(f) + 50), W = f.width + 2 * uw;
+          var uw = PRM.UW_DEFAULT, fh = up500(fieldTop(f) + PRM.FRAME_TOP_GAP), W = f.width + 2 * uw;
           var nL = f.levels.length, sc = pickScale(W + 1600, fh + 900, AW * 0.6 - (nL + 1) * 17 - 30, AH - 40), s = sc.s;
           var x0 = AX + 110, yF = AY + 30 + fh * s;
           o.line(x0 - 40, yF, x0 + W * s + 40, yF, 1.2);
           o.rect(x0, yF - fh * s, uw * s, fh * s, '#C9CFD4', '0.8px solid #16202A');
           o.rect(x0 + (uw + f.width) * s, yF - fh * s, uw * s, fh * s, '#C9CFD4', '0.8px solid #16202A');
           var z = 0, ys = [0];
-          if (fart(f) === 'Bodennahe Traverse') o.rect(x0 + uw * s, yF - 250 * s, f.width * s, 110 * s, ralHex(f.levels[0] ? f.levels[0].color : '5010'), '0.6px solid #16202A');
+          if (fart(f) === 'Bodennahe Traverse') o.rect(x0 + uw * s, yF - PRM.LOWBEAM_Z * s, f.width * s, PRM.LOWBEAM_PROF * s, ralHex(f.levels[0] ? f.levels[0].color : '5010'), '0.6px solid #16202A');
           var nPS = perBay(f.width), gPS = (f.width - nPS * 800) / (nPS + 1);
           var palS = function (zb, T) {
             for (var ip = 0; ip < nPS; ip++) {
@@ -2122,7 +2285,7 @@ class Component extends DCLogic {
             xx += uw;
             if (!f.empty) {
               var z = 0;
-              if (fart(f) === 'Bodennahe Traverse') o.rect(x0 + xx * s, yF - 250 * s, f.width * s, Math.max(1.5, 110 * s), ralHex(f.levels[0] ? f.levels[0].color : '5010'));
+              if (fart(f) === 'Bodennahe Traverse') o.rect(x0 + xx * s, yF - PRM.LOWBEAM_Z * s, f.width * s, Math.max(1.5, PRM.LOWBEAM_PROF * s), ralHex(f.levels[0] ? f.levels[0].color : '5010'));
               f.levels.forEach(function (l) { z += l.gap; o.rect(x0 + xx * s, yF - z * s, f.width * s, Math.max(1.5, lprof(l) * s), ralHex(l.color)); });
               o.text(x0 + (xx + f.width / 2) * s, yF - 10, T0(f).id, 10, 700, 0, T0(f).color);
             } else o.text(x0 + (xx + f.width / 2) * s, yF - 10, 'Lücke', 9, 400, 0, '#4A5866');
@@ -2136,7 +2299,7 @@ class Component extends DCLogic {
           // Draufsicht darunter
           var yP = yF + 80, sides = r.double ? 2 : 1;
           for (var sd = 0; sd < sides; sd++) {
-            var yy = yP + sd * (r.depth + (r.mid || 200)) * s, xq = 0;
+            var yy = yP + sd * (r.depth + (r.mid || PRM.MID_DEFAULT)) * s, xq = 0;
             r.fields.forEach(function (f, k) {
               xq += fuw(r.frames[k]);
               var gap = f.empty || (r.double && ((sd === 1 && f.gapV) || (sd === 0 && f.gapH)));
@@ -2227,8 +2390,8 @@ class Component extends DCLogic {
         var list = st.rows.slice(); list.splice(curRow, 1);
         self.setState({ rows: list, sel: null, selRow: Math.max(0, curRow - 1) });
       },
-      aisleDec: function () { self.setState({ aisle: Math.max(1000, st.aisle - 100) }); },
-      aisleInc: function () { self.setState({ aisle: Math.min(6000, st.aisle + 100) }); },
+      aisleDec: function () { self.setState({ aisle: Math.max(PRM.AISLE_MIN, st.aisle - PRM.AISLE_STEP) }); },
+      aisleInc: function () { self.setState({ aisle: Math.min(PRM.AISLE_MAX, st.aisle + PRM.AISLE_STEP) }); },
       dragEnd: function () { self.setState({ drag: null, dropAt: null }); },
       stop: function (e) { if (e) e.stopPropagation(); },
       persp: vw === '3d' ? '1800px' : 'none',
@@ -2241,6 +2404,18 @@ class Component extends DCLogic {
       reset3d: function () { self.setState({ rot: -32, tilt: 58, zoom: 1.6, view: '3d', pan: { x: 0, y: 0 }, focus: null }); },
       noCtx: function (e) { if (e && e.preventDefault) e.preventDefault(); },
       p3Down: function (e) {
+        // Touch: zwei Finger = verschieben (Pan) und zoomen (Pinch)
+        if (e.pointerType === 'touch') {
+          var TT = self._touch = self._touch || {}; TT[e.pointerId] = { x: e.clientX, y: e.clientY };
+          var ids = Object.keys(TT);
+          if (ids.length >= 2) {
+            var ta = TT[ids[0]], tb = TT[ids[1]];
+            self._g = { cx: (ta.x + tb.x) / 2, cy: (ta.y + tb.y) / 2, dist: Math.hypot(ta.x - tb.x, ta.y - tb.y) || 1, pan: st.pan || { x: 0, y: 0 }, zoom: st.zoom };
+            self._d3 = { moved: true, gesture: true, x: 0, y: 0 };
+            if (st.lassoBox) self.setState({ lassoBox: null });
+            return;
+          }
+        }
         if (e.button === 2) { self._d3 = { x: e.clientX, y: e.clientY, moved: false, id: e.pointerId, pan2: true, pan: st.pan || { x: 0, y: 0 } }; return; }
         var mv = st.moveMode && sel && sel.kind === 'row' ? { ri: sel.ri, pos: clone(st.rows[sel.ri].pos || { x: 0, y: 0 }) } : null;
         var ls = (st.lasso || e.shiftKey) ? { add: !!(e.ctrlKey || e.metaKey) } : null;
@@ -2248,8 +2423,19 @@ class Component extends DCLogic {
         self._d3 = { x: e.clientX, y: e.clientY, rot: st.rot, tilt: st.tilt, moved: false, id: e.pointerId, mv: mv, lasso: ls, pan: st.pan || { x: 0, y: 0 } }; self._pt = menuAt(e);
       },
       p3Move: function (e) {
-        var d = self._d3; if (!d) return;
-        var dx = e.clientX - d.x, dy = e.clientY - d.y;
+        if (e.pointerType === 'touch' && self._touch && self._touch[e.pointerId]) self._touch[e.pointerId] = { x: e.clientX, y: e.clientY };
+        var AS = parseFloat(document.documentElement.style.getPropertyValue('--app-s')) || 1;
+        if (self._g) {
+          var gi = Object.keys(self._touch || {});
+          if (gi.length >= 2) {
+            var ga = self._touch[gi[0]], gb = self._touch[gi[1]], G = self._g;
+            var gcx = (ga.x + gb.x) / 2, gcy = (ga.y + gb.y) / 2, gd = Math.hypot(ga.x - gb.x, ga.y - gb.y) || 1;
+            self.setState({ pan: { x: G.pan.x + (gcx - G.cx) / AS, y: G.pan.y + (gcy - G.cy) / AS }, zoom: Math.max(0.2, Math.min(6, G.zoom * gd / G.dist)) });
+          }
+          return;
+        }
+        var d = self._d3; if (!d || d.gesture) return;
+        var dx = (e.clientX - d.x) / AS, dy = (e.clientY - d.y) / AS;
         if (!d.moved && Math.abs(dx) + Math.abs(dy) > 4) { d.moved = true; try { e.currentTarget.setPointerCapture(d.id); } catch (err) {} }
         if (d.pan2) { if (d.moved) self.setState({ pan: { x: d.pan.x + dx, y: d.pan.y + dy } }); return; }
         if (d.moved && d.lasso) {
@@ -2261,13 +2447,14 @@ class Component extends DCLogic {
           // Bildschirmbewegung auf die Bodenebene zurückrechnen (Neigung und Drehung herausrechnen)
           var ct = Math.max(0.25, Math.cos(effTilt * Math.PI / 180)), a = effRot * Math.PI / 180, yv = dy / ct;
           var wx = (dx * Math.cos(a) + yv * Math.sin(a)) / self._s3, wy = (-dx * Math.sin(a) + yv * Math.cos(a)) / self._s3;
-          var nx = Math.round((d.mv.pos.x + wx) / 50) * 50, ny = Math.round((d.mv.pos.y + wy) / 50) * 50;
+          var nx = Math.round((d.mv.pos.x + wx) / PRM.RASTER) * PRM.RASTER, ny = Math.round((d.mv.pos.y + wy) / PRM.RASTER) * PRM.RASTER;
           var rows = self.state.rows.slice(), rr = clone(rows[d.mv.ri]); rr.pos = { x: nx, y: ny }; rows[d.mv.ri] = rr;
           self.setState({ rows: rows });
         } else if (d.moved && vw !== '3d') self.setState({ pan: { x: d.pan.x + dx, y: d.pan.y + dy } });
         else if (d.moved) self.setState({ rot: d.rot + dx * 0.4, tilt: Math.max(15, Math.min(88, d.tilt - dy * 0.3)) });
       },
       p3Up: function (e) {
+        if (e && self._touch) { delete self._touch[e.pointerId]; if (self._g && Object.keys(self._touch).length < 2) self._g = null; }
         var d = self._d3;
         if (d && d.lasso && d.moved && d.cx !== undefined) {
           // alle Bauteile, deren Bildmitte im Rechteck liegt, der gewählten Art zuordnen
