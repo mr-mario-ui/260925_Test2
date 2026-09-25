@@ -40,7 +40,7 @@ button:disabled{opacity:.35;cursor:default}
   <div style="height: 64px; box-sizing: border-box; padding: 0 24px; display: flex; align-items: center; gap: 24px; background: #16202A; color: #F3F5F7">
     <div style="display: flex; flex-direction: column; gap: 1px; flex-grow: 1">
       <div style="font-family: 'IBM Plex Sans Condensed', sans-serif; font-weight: 700; font-size: 21px">Regalplaner</div>
-      <div style="font-size: 12px; color: #A9B6C2">Projekt [PROJEKTNAME] · Version 26.09.2026 00:11</div>
+      <div style="font-size: 12px; color: #A9B6C2">Projekt [PROJEKTNAME] · Version 26.09.2026 00:36</div>
     </div>
     <div style="display: flex; flex-direction: column; align-items: flex-end"><span style="font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: #A9B6C2">Reihen</span><span class="mono" style="font-size: 19px">{{tot.rows}}</span></div>
     <div style="display: flex; flex-direction: column; align-items: flex-end"><span style="font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: #A9B6C2">Felder</span><span class="mono" style="font-size: 19px">{{tot.fields}}</span></div>
@@ -2644,6 +2644,8 @@ class Component extends DCLogic {
           // Bildschirmbewegung auf die Bodenebene zurückrechnen (Neigung und Drehung herausrechnen)
           var ct = Math.max(0.25, Math.cos(effTilt * Math.PI / 180)), a = effRot * Math.PI / 180, yv = dy / ct;
           var wx = (dx * Math.cos(a) + yv * Math.sin(a)) / self._s3, wy = (-dx * Math.sin(a) + yv * Math.cos(a)) / self._s3;
+          // nur achsparallel verschieben: die größere Bewegungsrichtung gewinnt, die andere bleibt fest
+          if (Math.abs(wx) >= Math.abs(wy)) wy = 0; else wx = 0;
           var nx = Math.round((d.mv.pos.x + wx) / PRM.RASTER) * PRM.RASTER, ny = Math.round((d.mv.pos.y + wy) / PRM.RASTER) * PRM.RASTER;
           var rows = self.state.rows.slice(), rr = clone(rows[d.mv.ri]); rr.pos = { x: nx, y: ny }; rows[d.mv.ri] = rr;
           self.setState({ rows: rows });
