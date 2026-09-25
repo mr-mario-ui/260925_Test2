@@ -40,7 +40,7 @@ button:disabled{opacity:.35;cursor:default}
   <div style="height: 64px; box-sizing: border-box; padding: 0 24px; display: flex; align-items: center; gap: 24px; background: #16202A; color: #F3F5F7">
     <div style="display: flex; flex-direction: column; gap: 1px; flex-grow: 1">
       <div style="font-family: 'IBM Plex Sans Condensed', sans-serif; font-weight: 700; font-size: 21px">Regalplaner</div>
-      <div style="font-size: 12px; color: #A9B6C2">Projekt [PROJEKTNAME] · Version 25.09.2026 23:21</div>
+      <div style="font-size: 12px; color: #A9B6C2">Projekt [PROJEKTNAME] · Version 25.09.2026 23:28</div>
     </div>
     <div style="display: flex; flex-direction: column; align-items: flex-end"><span style="font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: #A9B6C2">Reihen</span><span class="mono" style="font-size: 19px">{{tot.rows}}</span></div>
     <div style="display: flex; flex-direction: column; align-items: flex-end"><span style="font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: #A9B6C2">Felder</span><span class="mono" style="font-size: 19px">{{tot.fields}}</span></div>
@@ -106,7 +106,7 @@ button:disabled{opacity:.35;cursor:default}
       </div>
       <span></span>
       <sc-if value="{{isoOn}}" hint-placeholder-val="{{false}}">
-        <div onPointerDown="{{stop}}" onClick="{{stop}}" style="position: absolute; left: 12px; top: 56px; width: 300px; box-sizing: border-box; z-index: 21; display: flex; align-items: center; justify-content: space-between; gap: 8px; background: #16202A; color: #F3F5F7; border-radius: 6px; padding: 5px 5px 5px 10px; box-shadow: 0 4px 14px rgba(22,32,42,0.25); cursor: default">
+        <div onPointerDown="{{stop}}" onClick="{{stop}}" style="position: absolute; left: 12px; top: 56px; width: 300px; box-sizing: border-box; z-index: 21; display: flex; align-items: center; justify-content: space-between; gap: 8px; background: #45787E; color: #F3F5F7; border-radius: 6px; padding: 5px 5px 5px 10px; box-shadow: 0 4px 14px rgba(22,32,42,0.25); cursor: default">
           <span style="font-size: 12px; line-height: 1.2">Isoliert: <b>{{isoName}}</b></span>
           <button type="button" onClick="{{isoOff}}" style="height: 28px; padding: 0 10px; border: 0; border-radius: 4px; background: #F3F5F7; color: #16202A; font-weight: 600; font-size: 12px; cursor: pointer">Alle zeigen</button>
         </div>
@@ -128,7 +128,7 @@ button:disabled{opacity:.35;cursor:default}
             <button type="button" onClick="{{udimClear}}" disabled="{{udimNone}}" style="height: 30px; padding: 0 9px; border: 1px solid #E5B4AA; border-radius: 4px; background: #FFFFFF; color: #8E1F12; cursor: pointer; font-size: 12px">Alle</button>
           </div>
         </sc-if>
-        <button type="button" onClick="{{toggleLasso}}" aria-pressed="{{lassoPressed}}" title="Lasso: Rechteck aufziehen, um mehrere Elemente zu markieren" style="height: 32px; padding: 0 12px; border: 1px solid #16202A; border-radius: 5px; background: {{lassoBg}}; color: {{lassoFg}}; cursor: pointer; font-size: 12.5px; font-weight: 600">Lasso</button>
+        <button type="button" onClick="{{toggleLasso}}" aria-pressed="{{lassoPressed}}" title="Lasso: Rechteck aufziehen, um mehrere Elemente zu markieren" style="height: 32px; padding: 0 12px; border: 1px solid #45787E; border-radius: 5px; background: {{lassoBg}}; color: {{lassoFg}}; cursor: pointer; font-size: 12.5px; font-weight: 600">Lasso</button>
         <sc-if value="{{lassoMode}}" hint-placeholder-val="{{false}}">
           <div role="group" aria-label="Lasso wählt" style="display: flex; border: 1px solid #CBD3DA; border-radius: 5px; overflow: hidden">
             <sc-for list="{{lassoKinds}}" as="lk" hint-placeholder-count="4">
@@ -136,14 +136,14 @@ button:disabled{opacity:.35;cursor:default}
             </sc-for>
           </div>
         </sc-if>
-        <div role="group" aria-label="Ansicht" style="display: flex; border: 1px solid #16202A; border-radius: 5px; overflow: hidden; margin-right: 6px; margin-left: 6px">
+        <div role="group" aria-label="Ansicht" style="display: flex; border: 1px solid #45787E; border-radius: 5px; overflow: hidden; margin-right: 6px; margin-left: 6px">
           <sc-for list="{{viewOpts}}" as="v" hint-placeholder-count="3">
             <button type="button" onClick="{{v.pick}}" aria-pressed="{{v.pressed}}" style="height: 30px; padding: 0 12px; border: 0; font-size: 12.5px; font-weight: 600; cursor: pointer; background: {{v.bg}}; color: {{v.fg}}">{{v.label}}</button>
           </sc-for>
         </div>
         <button type="button" onClick="{{rotL}}" aria-label="Nach links drehen" style="width: 32px; height: 32px; border: 1px solid #CBD3DA; border-radius: 4px; background: #FFFFFF; cursor: pointer">⟲</button>
         <button type="button" onClick="{{rotR}}" aria-label="Nach rechts drehen" style="width: 32px; height: 32px; border: 1px solid #CBD3DA; border-radius: 4px; background: #FFFFFF; cursor: pointer">⟳</button>
-        <button type="button" onClick="{{fitAll}}" title="Anlage optimal in der Zeichenfläche ausrichten" style="height: 32px; padding: 0 10px; border: 1px solid #16202A; border-radius: 4px; background: #FFFFFF; cursor: pointer; font-size: 12.5px; font-weight: 600">⤢ Einpassen</button>
+        <button type="button" onClick="{{fitAll}}" title="Anlage optimal in der Zeichenfläche ausrichten" style="height: 32px; padding: 0 10px; border: 1px solid #45787E; border-radius: 4px; background: #FFFFFF; cursor: pointer; font-size: 12.5px; font-weight: 600">⤢ Einpassen</button>
         <button type="button" onClick="{{reset3d}}" style="height: 32px; padding: 0 10px; border: 1px solid #CBD3DA; border-radius: 4px; background: #FFFFFF; cursor: pointer; font-size: 12.5px">Zurücksetzen</button>
       </div>
       <sc-if value="{{bom.on}}" hint-placeholder-val="{{false}}">
@@ -199,7 +199,7 @@ button:disabled{opacity:.35;cursor:default}
         <sc-if value="{{ins.hasScope}}" hint-placeholder-val="{{false}}">
           <div style="display: flex; flex-direction: column; gap: 6px">
             <span style="font-size: 12px; font-weight: 600; color: #4A5866">Änderung gilt für</span>
-            <div style="display: flex; border: 1px solid #16202A; border-radius: 5px; overflow: hidden">
+            <div style="display: flex; border: 1px solid #45787E; border-radius: 5px; overflow: hidden">
               <button type="button" onClick="{{ins.scopeOne}}" style="flex: 1; height: 32px; border: 0; font-size: 12px; cursor: pointer; background: {{ins.oneBg}}; color: {{ins.oneFg}}">Nur dieses Feld</button>
               <button type="button" onClick="{{ins.scopeAll}}" style="flex: 1; height: 32px; border: 0; font-size: 12px; cursor: pointer; background: {{ins.allBg}}; color: {{ins.allFg}}">Alle {{ins.typeN}} Felder Typ {{ins.typeId}}</button>
             </div>
@@ -290,7 +290,7 @@ button:disabled{opacity:.35;cursor:default}
                 </div>
               </sc-if>
               <div style="display: flex; gap: 6px">
-                <label style="flex: 1; position: relative; height: 30px; display: grid; place-items: center; border: 1px solid #16202A; border-radius: 4px; background: #FFFFFF; cursor: pointer; font-size: 12px; font-weight: 600">Excel laden …
+                <label style="flex: 1; position: relative; height: 30px; display: grid; place-items: center; border: 1px solid #45787E; border-radius: 4px; background: #FFFFFF; cursor: pointer; font-size: 12px; font-weight: 600">Excel laden …
                   <input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange="{{paramFile}}" style="position: absolute; inset: 0; opacity: 0; cursor: pointer">
                 </label>
                 <a href="parameter.xlsx" download="parameter.xlsx" style="flex: 1; height: 30px; display: grid; place-items: center; border: 1px solid #CBD3DA; border-radius: 4px; background: #FFFFFF; color: #16202A; font-size: 12px; text-decoration: none">Vorlage herunterladen</a>
@@ -385,7 +385,7 @@ button:disabled{opacity:.35;cursor:default}
         <!-- Feld -->
         <sc-if value="{{ins.isField}}" hint-placeholder-val="{{false}}">
           <div style="display: flex; flex-direction: column; gap: 14px">
-            <button type="button" onClick="{{ins.toggleFIso}}" aria-pressed="{{ins.fIsIso}}" style="height: 34px; border: 1px solid #16202A; border-radius: 5px; cursor: pointer; font-size: 12.5px; font-weight: 600; background: {{ins.fIsoBg}}; color: {{ins.fIsoFg}}">{{ins.fIsoLabel}}</button>
+            <button type="button" onClick="{{ins.toggleFIso}}" aria-pressed="{{ins.fIsIso}}" style="height: 34px; border: 1px solid #45787E; border-radius: 5px; cursor: pointer; font-size: 12.5px; font-weight: 600; background: {{ins.fIsoBg}}; color: {{ins.fIsoFg}}">{{ins.fIsoLabel}}</button>
             <div style="display: flex; flex-direction: column; gap: 6px">
               <span style="font-size: 12px; font-weight: 600; color: #4A5866">Feldart</span>
               <select data-options="{{optArt}}" id="fieldArt" value="{{ins.art}}" onChange="{{ins.setArt}}" aria-label="Feldart" style="height: 32px; border: 1px solid #CBD3DA; border-radius: 4px; padding: 0 8px; font-size: 13px; color: #16202A; background: #FFFFFF; cursor: pointer"></select>
@@ -462,8 +462,8 @@ button:disabled{opacity:.35;cursor:default}
               <div style="display: flex; flex-direction: column; gap: 6px">
                 <span style="font-size: 12px; font-weight: 600; color: #4A5866">Feld auf einer Seite entfernen (Doppelreihe)</span>
                 <div style="display: flex; gap: 6px">
-                  <button type="button" onClick="{{ins.toggleGapV}}" aria-pressed="{{ins.gapVPressed}}" style="flex: 1; height: 34px; border-radius: 4px; cursor: pointer; font-size: 12.5px; background: {{ins.gapVBg}}; color: {{ins.gapVFg}}; border: 1px solid #16202A">{{ins.gapVLabel}}</button>
-                  <button type="button" onClick="{{ins.toggleGapH}}" aria-pressed="{{ins.gapHPressed}}" style="flex: 1; height: 34px; border-radius: 4px; cursor: pointer; font-size: 12.5px; background: {{ins.gapHBg}}; color: {{ins.gapHFg}}; border: 1px solid #16202A">{{ins.gapHLabel}}</button>
+                  <button type="button" onClick="{{ins.toggleGapV}}" aria-pressed="{{ins.gapVPressed}}" style="flex: 1; height: 34px; border-radius: 4px; cursor: pointer; font-size: 12.5px; background: {{ins.gapVBg}}; color: {{ins.gapVFg}}; border: 1px solid #45787E">{{ins.gapVLabel}}</button>
+                  <button type="button" onClick="{{ins.toggleGapH}}" aria-pressed="{{ins.gapHPressed}}" style="flex: 1; height: 34px; border-radius: 4px; cursor: pointer; font-size: 12.5px; background: {{ins.gapHBg}}; color: {{ins.gapHFg}}; border: 1px solid #45787E">{{ins.gapHLabel}}</button>
                 </div>
               </div>
             </sc-if>
@@ -483,7 +483,7 @@ button:disabled{opacity:.35;cursor:default}
                 </sc-for>
               </div>
             </div>
-            <button type="button" onClick="{{ins.restoreField}}" style="height: 34px; border: 1px solid #16202A; border-radius: 4px; background: #16202A; color: #FFFFFF; cursor: pointer; font-size: 12.5px">Feld wieder einsetzen</button>
+            <button type="button" onClick="{{ins.restoreField}}" style="height: 34px; border: 1px solid #45787E; border-radius: 4px; background: #45787E; color: #FFFFFF; cursor: pointer; font-size: 12.5px">Feld wieder einsetzen</button>
             <button type="button" onClick="{{ins.removeField}}" style="height: 34px; border: 1px solid #E5B4AA; border-radius: 4px; background: #FFFFFF; color: #8E1F12; cursor: pointer; font-size: 12.5px">Lücke schließen (Reihe zusammenschieben)</button>
           </div>
         </sc-if>
@@ -558,7 +558,7 @@ button:disabled{opacity:.35;cursor:default}
           <div style="display: flex; flex-direction: column; gap: 14px">
             <div style="display: flex; flex-direction: column; gap: 8px">
               <span style="font-size: 12px; font-weight: 600; color: #4A5866">Position auf der Hallenfläche</span>
-              <button type="button" onClick="{{ins.toggleMove}}" aria-pressed="{{ins.movePressed}}" style="display: flex; align-items: center; justify-content: center; gap: 8px; height: 36px; border-radius: 4px; cursor: pointer; font-size: 12.5px; font-weight: 600; background: {{ins.moveBg}}; color: {{ins.moveFg}}; border: 1px solid #16202A">
+              <button type="button" onClick="{{ins.toggleMove}}" aria-pressed="{{ins.movePressed}}" style="display: flex; align-items: center; justify-content: center; gap: 8px; height: 36px; border-radius: 4px; cursor: pointer; font-size: 12.5px; font-weight: 600; background: {{ins.moveBg}}; color: {{ins.moveFg}}; border: 1px solid #45787E">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1.5v13M1.5 8h13M8 1.5 6 3.5M8 1.5l2 2M8 14.5l-2-2M8 14.5l2-2M1.5 8l2-2M1.5 8l2 2M14.5 8l-2-2M14.5 8l-2 2"></path></svg>
                 {{ins.moveLabel}}
               </button>
@@ -592,10 +592,10 @@ button:disabled{opacity:.35;cursor:default}
                 <button type="button" onClick="{{ins.angR}}" aria-label="Reihe 90° im Uhrzeigersinn drehen" title="90° rechts" style="width: 32px; height: 30px; border: 0; background: transparent; cursor: pointer; font-size: 15px">⟳</button>
               </div>
             </div>
-            <button type="button" onClick="{{ins.toggleIso}}" aria-pressed="{{ins.isIso}}" style="height: 34px; border: 1px solid #16202A; border-radius: 5px; cursor: pointer; font-size: 12.5px; font-weight: 600; background: {{ins.isoBg}}; color: {{ins.isoFg}}">{{ins.isoLabel}}</button>
+            <button type="button" onClick="{{ins.toggleIso}}" aria-pressed="{{ins.isIso}}" style="height: 34px; border: 1px solid #45787E; border-radius: 5px; cursor: pointer; font-size: 12.5px; font-weight: 600; background: {{ins.isoBg}}; color: {{ins.isoFg}}">{{ins.isoLabel}}</button>
             <div style="display: flex; flex-direction: column; gap: 6px">
               <span style="font-size: 12px; font-weight: 600; color: #4A5866">Reihenart</span>
-              <div style="display: flex; border: 1px solid #16202A; border-radius: 5px; overflow: hidden">
+              <div style="display: flex; border: 1px solid #45787E; border-radius: 5px; overflow: hidden">
                 <button type="button" onClick="{{ins.setSingle}}" style="flex: 1; height: 32px; border: 0; font-size: 12.5px; cursor: pointer; background: {{ins.sBg}}; color: {{ins.sFg}}">Einzelreihe</button>
                 <button type="button" onClick="{{ins.setDouble}}" style="flex: 1; height: 32px; border: 0; font-size: 12.5px; cursor: pointer; background: {{ins.dBg}}; color: {{ins.dFg}}">Doppelreihe</button>
               </div>
@@ -713,7 +713,7 @@ button:disabled{opacity:.35;cursor:default}
             <label style="display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; font-weight: 600; color: #4A5866">Name der Konfiguration
               <input type="text" id="saveName" value="{{io.name}}" onChange="{{io.setName}}" style="height: 36px; border: 1px solid #CBD3DA; border-radius: 4px; padding: 0 10px; font-size: 14px; color: #16202A; font-weight: 400">
             </label>
-            <button type="button" onClick="{{io.saveLocal}}" style="height: 38px; border: 0; border-radius: 4px; background: #16202A; color: #FFFFFF; font-weight: 600; font-size: 13.5px; cursor: pointer">Im Browser speichern</button>
+            <button type="button" onClick="{{io.saveLocal}}" style="height: 38px; border: 0; border-radius: 4px; background: #45787E; color: #FFFFFF; font-weight: 600; font-size: 13.5px; cursor: pointer">Im Browser speichern</button>
             <div style="font-size: 12px; color: #4A5866">Oder als Text sichern, z. B. in einer E-Mail oder Datei – über „Laden“ lässt er sich wieder einfügen:</div>
             <textarea id="saveJson" readOnly="{{io.yes}}" value="{{io.json}}" style="height: 150px; resize: vertical; border: 1px solid #CBD3DA; border-radius: 4px; padding: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #16202A"></textarea>
             <button type="button" onClick="{{io.copyJson}}" style="height: 34px; border: 1px solid #CBD3DA; border-radius: 4px; background: #FFFFFF; cursor: pointer; font-size: 12.5px">Text kopieren</button>
@@ -732,13 +732,13 @@ button:disabled{opacity:.35;cursor:default}
                   <span style="font-weight: 600; font-size: 13.5px">{{sv.name}}</span>
                   <span class="mono" style="font-size: 11px; color: #4A5866">{{sv.info}}</span>
                 </div>
-                <button type="button" onClick="{{sv.load}}" style="height: 30px; padding: 0 12px; border: 0; border-radius: 4px; background: #16202A; color: #FFFFFF; cursor: pointer; font-size: 12.5px">Laden</button>
+                <button type="button" onClick="{{sv.load}}" style="height: 30px; padding: 0 12px; border: 0; border-radius: 4px; background: #45787E; color: #FFFFFF; cursor: pointer; font-size: 12.5px">Laden</button>
                 <button type="button" onClick="{{sv.del}}" aria-label="Gespeicherte Konfiguration löschen" style="height: 30px; padding: 0 10px; border: 1px solid #E5B4AA; border-radius: 4px; background: #FFFFFF; color: #8E1F12; cursor: pointer; font-size: 12.5px">Löschen</button>
               </div>
             </sc-for>
             <span style="font-size: 12.5px; font-weight: 600; color: #4A5866; margin-top: 6px">Aus gesichertem Text laden</span>
             <textarea id="loadJson" value="{{io.paste}}" onChange="{{io.setPaste}}" placeholder="Gesicherten Konfigurationstext hier einfügen" style="height: 130px; resize: vertical; border: 1px solid #CBD3DA; border-radius: 4px; padding: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #16202A"></textarea>
-            <button type="button" onClick="{{io.loadPaste}}" style="height: 36px; border: 0; border-radius: 4px; background: #16202A; color: #FFFFFF; font-weight: 600; font-size: 13px; cursor: pointer">Text laden</button>
+            <button type="button" onClick="{{io.loadPaste}}" style="height: 36px; border: 0; border-radius: 4px; background: #45787E; color: #FFFFFF; font-weight: 600; font-size: 13px; cursor: pointer">Text laden</button>
           </div>
         </sc-if>
 
@@ -1284,7 +1284,7 @@ class Component extends DCLogic {
       var all = items.length, nOn = items.filter(function (x) { return x; }).length, common = all && items.every(function (x) { return x === items[0]; }) ? items[0] : null;
       function chip(id, label, col) {
         var on = common === id;
-        return { label: label, dot: col || 'transparent', bd: on ? '#16202A' : '#CBD3DA', bg: on ? '#16202A' : '#FFFFFF', fg: on ? '#FFFFFF' : '#16202A', pressed: on ? 'true' : 'false',
+        return { label: label, dot: col || 'transparent', bd: on ? '#45787E' : '#CBD3DA', bg: on ? '#45787E' : '#FFFFFF', fg: on ? '#FFFFFF' : '#16202A', pressed: on ? 'true' : 'false',
           pick: function () { apply(function (l) { l.pt = id || null; }, function (f) { f.fpt = id || null; }); } };
       }
       return {
@@ -1302,12 +1302,12 @@ class Component extends DCLogic {
         change: function (e) { var v = e.target.value; if (v) fn(v); } };
     }
     function colorOpts(cur, fn) {
-      return RAL.map(function (c) { var on = c.id === cur; return { label: c.name, sw: c.hex, bg: on ? '#16202A' : '#FFFFFF', fg: on ? '#FFFFFF' : '#16202A', bd: on ? '#16202A' : '#CBD3DA', pick: function () { fn(c.id); } }; });
+      return RAL.map(function (c) { var on = c.id === cur; return { label: c.name, sw: c.hex, bg: on ? '#45787E' : '#FFFFFF', fg: on ? '#FFFFFF' : '#16202A', bd: on ? '#45787E' : '#CBD3DA', pick: function () { fn(c.id); } }; });
     }
     function commonColor(levels) { if (!levels.length) return null; var c0 = levels[0].color || '5010'; return levels.every(function (l) { return (l.color || '5010') === c0; }) ? c0 : null; }
     function mixNote(levels) { return !levels.length ? ' (keine Ebenen vorhanden)' : (commonColor(levels) ? '' : ' (derzeit gemischt)'); }
     function opts(list, cur, fn, lab) {
-      return list.map(function (v) { var on = v === cur; return { label: lab ? lab(v) : v, bg: on ? '#16202A' : '#FFFFFF', fg: on ? '#FFFFFF' : '#16202A', bd: on ? '#16202A' : '#CBD3DA', pick: function () { fn(v); } }; });
+      return list.map(function (v) { var on = v === cur; return { label: lab ? lab(v) : v, bg: on ? '#45787E' : '#FFFFFF', fg: on ? '#FFFFFF' : '#16202A', bd: on ? '#45787E' : '#CBD3DA', pick: function () { fn(v); } }; });
     }
 
     var sel = st.sel;
@@ -1840,7 +1840,7 @@ class Component extends DCLogic {
     // Eigenschaften
     // Kontextmenü fest am linken Rand der 3D-Ansicht, unter der Hinweisleiste
     var menu = { x: 12, y: ISO !== null ? 100 : 56, maxH: ISO !== null ? 686 : 730 };
-    function crumb(label, target, active) { return { label: label, bg: active ? '#16202A' : '#EEF1F4', fg: active ? '#FFFFFF' : '#16202A', pick: function () { select(target); } }; }
+    function crumb(label, target, active) { return { label: label, bg: active ? '#45787E' : '#EEF1F4', fg: active ? '#FFFFFF' : '#16202A', pick: function () { select(target); } }; }
     var ins = { none: !sel, any: !!sel, isPlant: !sel, isFrame: false, isField: false, isLevel: false, isRow: false, warn: false, hasScope: false,
       crumbs: [crumb('Anlage', null, !sel)], kindLabel: 'Anlage', title: 'Anlage', scope: '' };
     if (sel) {
@@ -1852,7 +1852,7 @@ class Component extends DCLogic {
         ins.isRow = true; ins.title = R.name + (R.double ? ' (Doppelreihe)' : '');
         var P = R.pos || { x: 0, y: 0 }, mv = st.moveMode;
         ins.posX = fmt(P.x); ins.posY = fmt(P.y);
-        ins.moveBg = mv ? '#16202A' : '#FFFFFF'; ins.moveFg = mv ? '#FFFFFF' : '#16202A'; ins.movePressed = mv ? 'true' : 'false';
+        ins.moveBg = mv ? '#45787E' : '#FFFFFF'; ins.moveFg = mv ? '#FFFFFF' : '#16202A'; ins.movePressed = mv ? 'true' : 'false';
         ins.moveLabel = mv ? 'Verschieben aktiv – im 3D ziehen' : 'Mit der Maus verschieben';
         ins.toggleMove = function () { self.setState({ moveMode: !st.moveMode }); };
         var mvBy = function (dx, dy) { self.upd(ri, function (x) { var q = x.pos || { x: 0, y: 0 }; x.pos = { x: q.x + dx, y: q.y + dy }; }); };
@@ -1863,12 +1863,12 @@ class Component extends DCLogic {
         ins.angL = function () { self.upd(ri, function (x) { x.ang = (((x.ang || 0) - 90) % 360 + 360) % 360; }); };
         var rowIso = ISO === ri && !ISOF;
         ins.isIso = rowIso; ins.isoLabel = rowIso ? 'Alle Reihen wieder zeigen' : 'Reihe isoliert betrachten';
-        ins.isoBg = rowIso ? '#16202A' : '#FFFFFF'; ins.isoFg = rowIso ? '#FFFFFF' : '#16202A';
+        ins.isoBg = rowIso ? '#45787E' : '#FFFFFF'; ins.isoFg = rowIso ? '#FFFFFF' : '#16202A';
         ins.toggleIso = function () { self.setState({ isolate: ISO === ri && !ISOF ? null : ri, isoField: null }); };
         ins.angR = function () { self.upd(ri, function (x) { x.ang = ((x.ang || 0) + 90) % 360; }); };
         ins.isDouble = !!R.double; ins.mid = fmt(R.mid || PRM.MID_DEFAULT); ins.totalDepth = fmt(rowDepth(R));
-        ins.sBg = R.double ? '#FFFFFF' : '#16202A'; ins.sFg = R.double ? '#16202A' : '#FFFFFF';
-        ins.dBg = R.double ? '#16202A' : '#FFFFFF'; ins.dFg = R.double ? '#FFFFFF' : '#16202A';
+        ins.sBg = R.double ? '#FFFFFF' : '#45787E'; ins.sFg = R.double ? '#16202A' : '#FFFFFF';
+        ins.dBg = R.double ? '#45787E' : '#FFFFFF'; ins.dFg = R.double ? '#FFFFFF' : '#16202A';
         ins.setSingle = function () { self.upd(ri, function (x) { x.double = false; }); };
         ins.setDouble = function () { self.upd(ri, function (x) { x.double = true; if (!x.mid) x.mid = PRM.MID_DEFAULT; }); };
         ins.midDec = function () { self.upd(ri, function (x) { x.mid = Math.max(PRM.MID_MIN, (x.mid || PRM.MID_DEFAULT) - PRM.MID_STEP); }); };
@@ -1943,8 +1943,8 @@ class Component extends DCLogic {
         ins.single = true; ins.removeLabel = '− Ebene';
         ins.crumbs.push(crumb('F' + pad3(k2 + 1) + ' · Typ ' + TT.id, { kind: 'field', ri: ri, k: k2 }, sel.kind === 'field'));
         ins.hasScope = true; ins.typeId = TT.id; ins.typeN = TT.n;
-        ins.oneBg = st.scopeAll ? '#FFFFFF' : '#16202A'; ins.oneFg = st.scopeAll ? '#16202A' : '#FFFFFF';
-        ins.allBg = st.scopeAll ? '#16202A' : '#FFFFFF'; ins.allFg = st.scopeAll ? '#FFFFFF' : '#16202A';
+        ins.oneBg = st.scopeAll ? '#FFFFFF' : '#45787E'; ins.oneFg = st.scopeAll ? '#16202A' : '#FFFFFF';
+        ins.allBg = st.scopeAll ? '#45787E' : '#FFFFFF'; ins.allFg = st.scopeAll ? '#FFFFFF' : '#16202A';
         ins.scopeOne = function () { self.setState({ scopeAll: false }); };
         ins.scopeAll = function () { self.setState({ scopeAll: true }); };
         ins.removeOff = sel.kind === 'field' ? R.fields.length <= 1 : FD.levels.length < 1;
@@ -1962,7 +1962,7 @@ class Component extends DCLogic {
           ins.isField = true; ins.title = 'Feld ' + (cs[0] || (k2 + 1));
           var fIso = !!(ISOF && ISOF.ri === ri && ISOF.k === k2);
           ins.fIsIso = fIso; ins.fIsoLabel = fIso ? 'Alles wieder zeigen' : 'Feld isoliert betrachten';
-          ins.fIsoBg = fIso ? '#16202A' : '#FFFFFF'; ins.fIsoFg = fIso ? '#FFFFFF' : '#16202A';
+          ins.fIsoBg = fIso ? '#45787E' : '#FFFFFF'; ins.fIsoFg = fIso ? '#FFFFFF' : '#16202A';
           ins.toggleFIso = function () { self.setState({ isoField: fIso ? null : { ri: ri, k: k2 }, isolate: null }); };
           if (cs.length > 1) ins.scope = 'Gilt für ' + cs.length + ' Felder: ' + cs.join(', ') + '.';
           ins.widthOpts = opts(WIDTHS, FD.width, function (v) { self.editField(ri, k2, function (f) { f.width = v; }); }, fmt);
@@ -1989,7 +1989,7 @@ class Component extends DCLogic {
           ins.fieldColorOpts = colorSel(commonColor(FD.levels), function (v) { self.editField(ri, k2, function (f) { f.levels.forEach(function (l) { l.color = v; }); }); });
           ins.copyFrom = order.map(function (s) {
             var t = types[s];
-            return { id: t.id, color: t.color, bd: t === TT ? '#16202A' : t.color,
+            return { id: t.id, color: t.color, bd: t === TT ? '#45787E' : t.color,
               pick: function () { self.editField(ri, k2, function (f) { var src = clone(t.f); f.width = src.width; f.push = src.push; f.levels = src.levels; }); } };
           });
           ins.dupField = function () { self.addField(ri, k2 + 1, FD); };
@@ -1998,8 +1998,8 @@ class Component extends DCLogic {
           ins.makeGapLabel = R.double ? 'Feld beidseitig löschen, Lücke lassen' : 'Feld löschen, Lücke lassen (Durchgang)';
           ins.isDoubleRow = !!R.double;
           var gV = !!FD.gapV, gH = !!FD.gapH;
-          ins.gapVPressed = gV ? 'true' : 'false'; ins.gapVBg = gV ? '#16202A' : '#FFFFFF'; ins.gapVFg = gV ? '#FFFFFF' : '#16202A'; ins.gapVLabel = gV ? 'Vorne (V) wieder einsetzen' : 'Nur vorne (V) entfernen';
-          ins.gapHPressed = gH ? 'true' : 'false'; ins.gapHBg = gH ? '#16202A' : '#FFFFFF'; ins.gapHFg = gH ? '#FFFFFF' : '#16202A'; ins.gapHLabel = gH ? 'Hinten (H) wieder einsetzen' : 'Nur hinten (H) entfernen';
+          ins.gapVPressed = gV ? 'true' : 'false'; ins.gapVBg = gV ? '#45787E' : '#FFFFFF'; ins.gapVFg = gV ? '#FFFFFF' : '#16202A'; ins.gapVLabel = gV ? 'Vorne (V) wieder einsetzen' : 'Nur vorne (V) entfernen';
+          ins.gapHPressed = gH ? 'true' : 'false'; ins.gapHBg = gH ? '#45787E' : '#FFFFFF'; ins.gapHFg = gH ? '#FFFFFF' : '#16202A'; ins.gapHLabel = gH ? 'Hinten (H) wieder einsetzen' : 'Nur hinten (H) entfernen';
           ins.toggleGapV = function () { self.upd(ri, function (x) { var g = x.fields[k2]; g.gapV = !g.gapV; if (g.gapV && g.gapH) { g.gapV = false; g.gapH = false; g.saved = g.levels; g.levels = []; g.empty = true; } }); };
           ins.toggleGapH = function () { self.upd(ri, function (x) { var g = x.fields[k2]; g.gapH = !g.gapH; if (g.gapV && g.gapH) { g.gapV = false; g.gapH = false; g.saved = g.levels; g.levels = []; g.empty = true; } }); };
         }
@@ -2070,7 +2070,7 @@ class Component extends DCLogic {
         if (len > 0) self.setState({ udims: (st.udims || []).concat([u]), measA: null, measH: null });
       },
       lassoOn: lassoOn, lassoBox: st.lassoBox || { x: 0, y: 0, w: 0, h: 0 }, lassoMode: !!st.lasso,
-      lassoPressed: st.lasso ? 'true' : 'false', lassoBg: st.lasso ? '#16202A' : '#FFFFFF', lassoFg: st.lasso ? '#FFFFFF' : '#16202A',
+      lassoPressed: st.lasso ? 'true' : 'false', lassoBg: st.lasso ? '#45787E' : '#FFFFFF', lassoFg: st.lasso ? '#FFFFFF' : '#16202A',
       stageCursor: st.lasso ? 'crosshair' : 'grab',
       toggleLasso: function () { self.setState({ lasso: !st.lasso, measure: false, measA: null, measH: null }); },
       lassoKinds: [['field', 'Felder'], ['frame', 'Rahmen'], ['level', 'Ebenen'], ['row', 'Reihen']].map(function (o) {
@@ -2560,7 +2560,7 @@ class Component extends DCLogic {
       persp: vw === '3d' ? '1800px' : 'none',
       viewOpts: [['3d', '3D'], ['top', 'Draufsicht'], ['front', 'Vorderansicht']].map(function (v) {
         var on = vw === v[0];
-        return { label: v[1], pressed: on ? 'true' : 'false', bg: on ? '#16202A' : '#FFFFFF', fg: on ? '#FFFFFF' : '#16202A', pick: function () { self.setState({ view: v[0], pan: { x: 0, y: 0 }, fitPending: true }); } };
+        return { label: v[1], pressed: on ? 'true' : 'false', bg: on ? '#45787E' : '#FFFFFF', fg: on ? '#FFFFFF' : '#16202A', pick: function () { self.setState({ view: v[0], pan: { x: 0, y: 0 }, fitPending: true }); } };
       }),
       rotL: function () { self.setState({ rot: st.rot - 15, view: '3d' }); },
       rotR: function () { self.setState({ rot: st.rot + 15, view: '3d' }); },
