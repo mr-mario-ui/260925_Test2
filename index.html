@@ -40,7 +40,7 @@ button:disabled{opacity:.35;cursor:default}
   <div style="height: 64px; box-sizing: border-box; padding: 0 24px; display: flex; align-items: center; gap: 24px; background: #16202A; color: #F3F5F7">
     <div style="display: flex; flex-direction: column; gap: 1px; flex-grow: 1">
       <div style="font-family: 'IBM Plex Sans Condensed', sans-serif; font-weight: 700; font-size: 21px">Regalplaner</div>
-      <div style="font-size: 12px; color: #A9B6C2">Projekt [PROJEKTNAME] · Version 25.09.2026 22:46</div>
+      <div style="font-size: 12px; color: #A9B6C2">Projekt [PROJEKTNAME] · Version 25.09.2026 23:02</div>
     </div>
     <div style="display: flex; flex-direction: column; align-items: flex-end"><span style="font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: #A9B6C2">Reihen</span><span class="mono" style="font-size: 19px">{{tot.rows}}</span></div>
     <div style="display: flex; flex-direction: column; align-items: flex-end"><span style="font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: #A9B6C2">Felder</span><span class="mono" style="font-size: 19px">{{tot.fields}}</span></div>
@@ -151,6 +151,7 @@ button:disabled{opacity:.35;cursor:default}
           <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
             <span style="font-family: 'IBM Plex Sans Condensed', sans-serif; font-weight: 600; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: #4A5866">Stückliste · live</span>
             <div style="display: flex; gap: 4px">
+              <button type="button" onClick="{{bom.xlsx}}" style="height: 28px; padding: 0 10px; border: 1px solid #1F7A48; border-radius: 4px; background: #1F7A48; color: #FFFFFF; cursor: pointer; font-size: 12px; font-weight: 600" title="Stückliste als Excel-Datei (.xlsx) herunterladen">Excel-Export</button>
               <button type="button" onClick="{{bom.copy}}" style="height: 28px; padding: 0 10px; border: 1px solid #CBD3DA; border-radius: 4px; background: #FFFFFF; cursor: pointer; font-size: 12px">{{bom.copyLabel}}</button>
               <button type="button" onClick="{{toggleBom}}" aria-label="Stückliste schließen" style="width: 28px; height: 28px; border: 0; background: transparent; cursor: pointer; font-size: 16px; color: #4A5866">×</button>
             </div>
@@ -1005,6 +1006,56 @@ function syncLists() {
   if (LISTS.PAL_H) PAL_H = LISTS.PAL_H; if (LISTS.PAL_W) PAL_W = LISTS.PAL_W; if (LISTS.RAL) RAL = LISTS.RAL;
   GAP_MAX = PRM.GAP_MAX; ART_CLEAR = { 'Durchgang': PRM.CLEAR_DURCHGANG, 'Durchfahrt': PRM.CLEAR_DURCHFAHRT };
 }
+// ===== Excel (.xlsx) schreiben ohne Zusatzbibliothek: unkomprimiertes ZIP mit CRC32 =====
+var CRC_T = (function () { var t = []; for (var n = 0; n < 256; n++) { var c = n; for (var k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(u8) { var c = 0xFFFFFFFF; for (var i = 0; i < u8.length; i++) c = CRC_T[(c ^ u8[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function zipStore(files) {
+  var enc = new TextEncoder(), parts = [], central = [], off = 0;
+  files.forEach(function (f) {
+    var name = enc.encode(f.name), data = enc.encode(f.data), crc = crc32(data);
+    var lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, 0, true);
+    lh.setUint32(14, crc, true); lh.setUint32(18, data.length, true); lh.setUint32(22, data.length, true); lh.setUint16(26, name.length, true);
+    parts.push(new Uint8Array(lh.buffer), name, data);
+    var ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true);
+    ch.setUint32(16, crc, true); ch.setUint32(20, data.length, true); ch.setUint32(24, data.length, true); ch.setUint16(28, name.length, true); ch.setUint32(42, off, true);
+    central.push(new Uint8Array(ch.buffer), name);
+    off += 30 + name.length + data.length;
+  });
+  var csize = central.reduce(function (s, p) { return s + p.length; }, 0), end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true); end.setUint32(12, csize, true); end.setUint32(16, off, true);
+  return new Blob(parts.concat(central, [new Uint8Array(end.buffer)]), { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+}
+function xesc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+// sheets: [{ name, cols: [breiten], rows: [[{v, s}]] }]  s: 0 normal, 1 fett, 2 Kopfzeile, 3 Zahl, 4 Titel
+function buildXlsx(sheets) {
+  function col(i) { var s = ''; i++; while (i > 0) { var m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; }
+  var files = [
+    { name: '[Content_Types].xml', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' + sheets.map(function (s, i) { return '<Override PartName="/xl/worksheets/sheet' + (i + 1) + '.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'; }).join('') + '</Types>' },
+    { name: '_rels/.rels', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>' },
+    { name: 'xl/workbook.xml', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>' + sheets.map(function (s, i) { return '<sheet name="' + xesc(s.name) + '" sheetId="' + (i + 1) + '" r:id="rId' + (i + 1) + '"/>'; }).join('') + '</sheets></workbook>' },
+    { name: 'xl/_rels/workbook.xml.rels', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' + sheets.map(function (s, i) { return '<Relationship Id="rId' + (i + 1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet' + (i + 1) + '.xml"/>'; }).join('') + '<Relationship Id="rId' + (sheets.length + 1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>' },
+    { name: 'xl/styles.xml', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="164" formatCode="#,##0"/></numFmts><fonts count="4"><font><sz val="10"/><name val="Arial"/></font><font><b/><sz val="10"/><name val="Arial"/></font><font><b/><sz val="10"/><color rgb="FFFFFFFF"/><name val="Arial"/></font><font><b/><sz val="14"/><name val="Arial"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF16202A"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="5"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="0" fontId="2" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/><xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="0" fontId="3" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>' }
+  ];
+  sheets.forEach(function (sh, si) {
+    var rows = sh.rows.map(function (r, ri) {
+      return '<row r="' + (ri + 1) + '">' + r.map(function (c, ci) {
+        if (c === null || c === undefined || c.v === '' || c.v === null || c.v === undefined) return '';
+        var ref = col(ci) + (ri + 1), st = c.s ? ' s="' + c.s + '"' : '';
+        return typeof c.v === 'number' ? '<c r="' + ref + '"' + st + '><v>' + c.v + '</v></c>' : '<c r="' + ref + '" t="inlineStr"' + st + '><is><t xml:space="preserve">' + xesc(c.v) + '</t></is></c>';
+      }).join('') + '</row>';
+    }).join('');
+    var cols = sh.cols ? '<cols>' + sh.cols.map(function (w, i) { return '<col min="' + (i + 1) + '" max="' + (i + 1) + '" width="' + w + '" customWidth="1"/>'; }).join('') + '</cols>' : '';
+    files.push({ name: 'xl/worksheets/sheet' + (si + 1) + '.xml', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' + cols + '<sheetData>' + rows + '</sheetData></worksheet>' });
+  });
+  return zipStore(files);
+}
+function downloadBlob(blob, name) {
+  var url = URL.createObjectURL(blob), el = document.createElement('a');
+  el.href = url; el.download = name; document.body.appendChild(el); el.click();
+  setTimeout(function () { URL.revokeObjectURL(url); el.remove(); }, 1500);
+}
 function startRows() {
   var fs = []; for (var i = 0; i < Math.max(1, PRM.START_FIELDS); i++) fs.push(field(PRM.START_WIDTH, 'Ohne', PRM.START_GAPS.slice()));
   // Start: alle Ebenen und Bodenplätze mit Europalette P1 belegt
@@ -1667,6 +1718,26 @@ class Component extends DCLogic {
     var bomText = bomGroups.map(function (g) { return g.title + '\n' + g.items.map(function (it) { return it.pos + '  ' + it.qty + ' ×  ' + it.text; }).join('\n'); }).join('\n\n');
     var bom = { on: !!st.bomOn, groups: bomGroups, copyLabel: st.bomCopied ? 'Kopiert' : 'Kopieren',
       summary: posN + ' Positionen · ' + tot.rows + ' Reihen · ' + tot.fields + ' Felder · ' + tot.places + ' Stellplätze' + (tot.pal ? ' · ' + tot.pal + ' Paletten (' + fmt(tot.palKg) + ' kg)' : ''),
+      xlsx: function () {
+        var now = new Date(), T = function (v, s) { return { v: v, s: s || 0 }; };
+        var rows = [[T('Stückliste Regalanlage', 4)], [T('Projekt', 1), T('[PROJEKTNAME]')], [T('Erstellt', 1), T(now.toLocaleString('de-DE'))],
+          [T('Umfang', 1), T(tot.rows + ' Reihen · ' + tot.fields + ' Felder · ' + tot.places + ' Stellplätze')], [],
+          [T('Pos.', 2), T('Gruppe', 2), T('Menge', 2), T('Einheit', 2), T('Bezeichnung', 2)]];
+        var pn = 0;
+        GROUPS.forEach(function (g) {
+          order2.filter(function (k) { return bomMap[k].group === g; }).forEach(function (k) {
+            pn++; rows.push([T(pad3(pn)), T(g), T(bomMap[k].qty, 3), T('Stk.'), T(bomMap[k].text)]);
+          });
+        });
+        // zweites Blatt: Kennzahlen und Felder
+        var ov = [[T('Kennzahlen', 4)], [T('Reihen (inkl. Anzahl)', 1), T(tot.rows, 3)], [T('Felder', 1), T(tot.fields, 3)], [T('Stellplätze', 1), T(tot.places, 3)],
+          [T('Paletten', 1), T(tot.pal, 3)], [T('Palettengewicht gesamt (kg)', 1), T(tot.palKg, 3)], [T('Gassenbreite (mm)', 1), T(st.aisle, 3)], [],
+          [T('Feldtyp', 2), T('Feldart', 2), T('Feldweite (mm)', 2), T('Ebenen', 2), T('Anzahl', 2)]];
+        order.forEach(function (sg) { var ty = types[sg]; ov.push([T(ty.id), T(fart(ty.f)), T(ty.f.width, 3), T(ty.f.levels.length, 3), T(ty.n, 3)]); });
+        var blob = buildXlsx([{ name: 'Stückliste', cols: [8, 22, 10, 8, 70], rows: rows }, { name: 'Kennzahlen', cols: [30, 22, 16, 10, 10], rows: ov }]);
+        var d = now.getFullYear() + ('0' + (now.getMonth() + 1)).slice(-2) + ('0' + now.getDate()).slice(-2);
+        downloadBlob(blob, 'Stueckliste_' + d + '.xlsx');
+      },
       copy: function () {
         var done = function () { self.setState({ bomCopied: true }); setTimeout(function () { self.setState({ bomCopied: false }); }, 2000); };
         try { navigator.clipboard.writeText(bomText).then(done, function () {}); } catch (err) {}
