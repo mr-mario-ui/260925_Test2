@@ -89,6 +89,11 @@ button:disabled{opacity:.35;cursor:default}
             <span>{{pt.a}}</span><span style="font-weight: 500">{{pt.b}}</span>
           </div>
         </sc-for>
+        <sc-for list="{{scene.binfo}}" as="bi" hint-placeholder-count="0">
+          <div style="pointer-events: none; position: absolute; left: 0; top: 0; width: {{bi.w}}px; height: {{bi.h}}px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; transform-origin: 0 0; transform: {{bi.tf}}; font-size: {{bi.fs}}px; line-height: 1.1; color: #16202A; background: rgba(255,255,255,0.92); border: 1.5px solid {{bi.bd}}; border-radius: 3px; white-space: nowrap; overflow: hidden">
+            <span style="font-weight: 700">{{bi.a}}</span><span>{{bi.b}}</span><span style="font-weight: 600">{{bi.c}}</span>
+          </div>
+        </sc-for>
         <sc-for list="{{scene.handles}}" as="h" hint-placeholder-count="1">
           <div onClick="{{h.pick}}" title="Feld anfügen" style="position: absolute; left: 0; top: 0; width: {{h.w}}px; height: {{h.h}}px; box-sizing: border-box; border: 2px dashed #1F4E9C; border-radius: 4px; background: rgba(31,78,156,0.08); color: #1F4E9C; display: grid; place-items: center; font-weight: 700; font-size: {{h.fs}}px; transform-origin: 0 0; transform: {{h.tf}}; cursor: pointer">+</div>
         </sc-for>
@@ -1358,7 +1363,7 @@ class Component extends DCLogic {
     var MUTE = false, SINK_D = [], SINK_L = [], SINK_H = [];
     var s3 = Math.min(1000 / Math.max(maxLen, 1), (isTop ? 620 : 460) / Math.max(depthTot, 1), (isFront ? 520 : 220) / Math.max(maxH, 1)) * st.zoom;
     self._s3 = s3;
-    var p3 = [], handles = [], labels = [], ptexts = [];
+    var p3 = [], handles = [], labels = [], ptexts = [], binfo = [];
     var ROT = null;
     function Tr(x, y, z, r) {
       if (ROT) return 'translate3d(' + ROT.cx + 'px,' + ROT.cy + 'px,0px) rotateZ(' + ROT.a + 'deg) translate3d(' + (x - ROT.cx) + 'px,' + (y - ROT.cy) + 'px,' + z + 'px)' + (r || '');
@@ -1556,6 +1561,15 @@ class Component extends DCLogic {
           }
           if (lon) add(bwp, dpx, 'rgba(225,29,72,0.10)', Tr(xx + uwk, y0, z + 1), lt, ltgt, true, true);
           if (f.push) add(bwp, Math.max(1.5, 40 * s3), '#5F6B76', Tr(xx + uwk, nearAisle ? y0 + 2 : y0 + dpx - 2, z + 220 * s3, XZ), lt, ltgt);
+          // Feld (oder eine Ebene darin) gewählt: Traversendaten auf der Gangseite einblenden
+          var showB = sel && (inSel('field', ri, k) || (sel.kind === 'level' && !multi.length && sel.ri === ri && sel.k === k) || hiLevel(ri, k, l, zmm));
+          if (!MUTE && nearAisle && showB) {
+            var fsB = Math.max(7, Math.min(14, bwp / 16)), wB = Math.min(bwp * 0.96, fsB * 14), hB = fsB * 3.9, prB = lprof(lv) * s3;
+            binfo.push({ w: wB, h: hB, fs: fsB, a: 'E' + (l + 1) + ' · Profil ' + lprof(lv) + ' mm', b: 'Auflage OK ' + fmt(zmm) + ' mm',
+              c: 'Fachlast ' + fmt(perBay(f.width) * (lv.load || 0)) + ' kg',
+              bd: hiLevel(ri, k, l, zmm) ? '#E11D48' : '#16202A',
+              tf: Tr(xx + uwk + (bwp - wB) / 2, y0 + dpx + 60 * s3 + 1.5, z - prB - 2, XZ) });
+          }
           var TL = palOf(lv); if (TL) pallets(z, TL, !palFitsL(f, l) || palHeavy(lv), lt + ' · Palette ' + TL.id + ' · ' + fmt(TL.h) + ' mm / ' + fmt(TL.w) + ' kg', ltgt);
         });
         if (isFront && frontOK && ii === frontII && side === sides - 1) {
@@ -1672,7 +1686,7 @@ class Component extends DCLogic {
     (st.udims || []).forEach(function (u) { var d = udimItem(u); if (d) dims.push(d); });
     if (st.measure && st.measA && st.measH) { var pv = self._ortho(st.measA, st.measH); if (pv) { var dp = udimItem(pv, true); if (dp) dims.push(dp); } }
     dims.forEach(function (d) { if (!d.col) d.col = '#16202A'; if (d.op === undefined) d.op = 1; });
-    var scene = { ptexts: ptexts, plan: planScene, grid: grid, parts: p3, handles: handles, labels: labels, dims: dims, tf: 'translate(' + ((st.bomOn ? -30 : 160) + (st.pan ? st.pan.x : 0)) + 'px,' + ((isTop ? -120 : isFront ? 120 : 0) + (st.pan ? st.pan.y : 0)) + 'px) rotateX(' + effTilt + 'deg) rotateZ(' + effRot + 'deg) translate3d(' + (-(FOC ? FOC.x : maxLen / 2) * s3) + 'px,' + (-(FOC ? FOC.y : depthTot / 2) * s3) + 'px,' + (FOC ? (isTop ? 0 : -FOC.z * s3) : (isFront ? -maxH * s3 / 2 : 0)) + 'px)' };
+    var scene = { binfo: binfo, ptexts: ptexts, plan: planScene, grid: grid, parts: p3, handles: handles, labels: labels, dims: dims, tf: 'translate(' + ((st.bomOn ? -30 : 160) + (st.pan ? st.pan.x : 0)) + 'px,' + ((isTop ? -120 : isFront ? 120 : 0) + (st.pan ? st.pan.y : 0)) + 'px) rotateX(' + effTilt + 'deg) rotateZ(' + effRot + 'deg) translate3d(' + (-(FOC ? FOC.x : maxLen / 2) * s3) + 'px,' + (-(FOC ? FOC.y : depthTot / 2) * s3) + 'px,' + (FOC ? (isTop ? 0 : -FOC.z * s3) : (isFront ? -maxH * s3 / 2 : 0)) + 'px)' };
 
     // Eigenschaften
     // Kontextmenü fest am linken Rand der 3D-Ansicht, unter der Hinweisleiste
